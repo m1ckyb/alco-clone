@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/alco-clone/sw.js', { scope: '/alco-clone/' })})}
