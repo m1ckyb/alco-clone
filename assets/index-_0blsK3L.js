@@ -125,7 +125,7 @@ Error generating stack: `+e.message+`
           padding: var(--spacing-xl);
           opacity: 0.5;
         }
-      `})]})},le=()=>{let{profile:e,setProfile:t,drinks:n,presets:r,importData:i}=ne(),a=(0,_.useRef)(null),o=n=>{let{name:r,value:i}=n.target;t({...e,[r]:r===`weight`||r===`metabolismRate`?Number(i):i})};return(0,b.jsxs)(`div`,{className:`profile-settings`,children:[(0,b.jsxs)(`div`,{className:`settings-header`,children:[(0,b.jsx)(`h2`,{children:`Personal Profile`}),(0,b.jsx)(`p`,{children:`Correct weight and gender are essential for accurate BAC estimation using the Widmark formula.`})]}),(0,b.jsxs)(`div`,{className:`card settings-card`,children:[(0,b.jsxs)(`div`,{className:`form-section`,children:[(0,b.jsxs)(`div`,{className:`section-title`,children:[(0,b.jsx)(`span`,{children:`👤`}),` Body Metrics`]}),(0,b.jsxs)(`div`,{className:`form-group`,children:[(0,b.jsx)(`label`,{children:`Gender`}),(0,b.jsx)(`div`,{className:`select-wrapper`,children:(0,b.jsxs)(`select`,{name:`gender`,value:e.gender,onChange:o,children:[(0,b.jsx)(`option`,{value:`male`,children:`Male`}),(0,b.jsx)(`option`,{value:`female`,children:`Female`})]})}),(0,b.jsx)(`p`,{className:`help-text`,children:`Biological sex affects the body water ratio (r) used in calculations.`})]}),(0,b.jsxs)(`div`,{className:`form-group`,children:[(0,b.jsx)(`label`,{children:`Weight (kg)`}),(0,b.jsx)(`input`,{type:`number`,name:`weight`,min:`30`,max:`300`,value:e.weight,onChange:o}),(0,b.jsx)(`p`,{className:`help-text`,children:`Alcohol concentration is inversely proportional to body weight.`})]})]}),(0,b.jsxs)(`div`,{className:`form-section`,children:[(0,b.jsxs)(`div`,{className:`section-title`,children:[(0,b.jsx)(`span`,{children:`⚡`}),` Metabolism`]}),(0,b.jsxs)(`div`,{className:`form-group`,children:[(0,b.jsx)(`label`,{children:`Metabolism Rate (%/hr)`}),(0,b.jsx)(`input`,{type:`number`,name:`metabolismRate`,step:`0.001`,min:`0.005`,max:`0.040`,value:e.metabolismRate,onChange:o}),(0,b.jsx)(`p`,{className:`help-text`,children:`Standard average is 0.015. Adjust if you know you metabolize faster or slower.`})]})]}),(0,b.jsxs)(`div`,{className:`form-section`,children:[(0,b.jsxs)(`div`,{className:`section-title`,children:[(0,b.jsx)(`span`,{children:`💾`}),` Data Management`]}),(0,b.jsxs)(`div`,{className:`data-buttons`,children:[(0,b.jsx)(`button`,{className:`btn btn-secondary`,onClick:()=>{let t={profile:e,drinks:n,presets:r,exportDate:new Date().toISOString(),version:`1.0`},i=new Blob([JSON.stringify(t,null,2)],{type:`application/json`}),a=URL.createObjectURL(i),o=document.createElement(`a`);o.href=a,o.download=`alcoclone-backup-${new Date().toISOString().split(`T`)[0]}.json`,document.body.appendChild(o),o.click(),document.body.removeChild(o),URL.revokeObjectURL(a)},children:`Export Data`}),(0,b.jsx)(`button`,{className:`btn btn-secondary`,onClick:()=>{a.current?.click()},children:`Import Data`}),(0,b.jsx)(`input`,{type:`file`,ref:a,style:{display:`none`},accept:`.json`,onChange:e=>{let t=e.target.files?.[0];if(!t)return;let n=new FileReader;n.onload=t=>{try{let e=t.target?.result,n=JSON.parse(e);window.confirm(`This will overwrite your current profile, drinks, and presets. Continue?`)&&(i(n),alert(`Data imported successfully!`))}catch(e){console.error(`Failed to parse import file:`,e),alert(`Invalid backup file. Please make sure it is a valid JSON exported from this app.`)}e.target.value=``},n.readAsText(t)}})]}),(0,b.jsx)(`p`,{className:`help-text`,children:`Backup your data to a JSON file or restore from a previous backup.`})]})]}),(0,b.jsx)(`style`,{children:`
+      `})]})},le=()=>{let{profile:e,setProfile:t,drinks:n,presets:r,removePreset:i,importData:a}=ne(),o=(0,_.useRef)(null),s=n=>{let{name:r,value:i}=n.target;t({...e,[r]:r===`weight`||r===`metabolismRate`?Number(i):i})};return(0,b.jsxs)(`div`,{className:`profile-settings`,children:[(0,b.jsxs)(`div`,{className:`settings-header`,children:[(0,b.jsx)(`h2`,{children:`Personal Profile`}),(0,b.jsx)(`p`,{children:`Correct weight and gender are essential for accurate BAC estimation using the Widmark formula.`})]}),(0,b.jsxs)(`div`,{className:`card settings-card`,children:[(0,b.jsxs)(`div`,{className:`form-section`,children:[(0,b.jsxs)(`div`,{className:`section-title`,children:[(0,b.jsx)(`span`,{children:`👤`}),` Body Metrics`]}),(0,b.jsxs)(`div`,{className:`form-group`,children:[(0,b.jsx)(`label`,{children:`Gender`}),(0,b.jsx)(`div`,{className:`select-wrapper`,children:(0,b.jsxs)(`select`,{name:`gender`,value:e.gender,onChange:s,children:[(0,b.jsx)(`option`,{value:`male`,children:`Male`}),(0,b.jsx)(`option`,{value:`female`,children:`Female`})]})}),(0,b.jsx)(`p`,{className:`help-text`,children:`Biological sex affects the body water ratio (r) used in calculations.`})]}),(0,b.jsxs)(`div`,{className:`form-group`,children:[(0,b.jsx)(`label`,{children:`Weight (kg)`}),(0,b.jsx)(`input`,{type:`number`,name:`weight`,min:`30`,max:`300`,value:e.weight,onChange:s}),(0,b.jsx)(`p`,{className:`help-text`,children:`Alcohol concentration is inversely proportional to body weight.`})]})]}),(0,b.jsxs)(`div`,{className:`form-section`,children:[(0,b.jsxs)(`div`,{className:`section-title`,children:[(0,b.jsx)(`span`,{children:`⚡`}),` Metabolism`]}),(0,b.jsxs)(`div`,{className:`form-group`,children:[(0,b.jsx)(`label`,{children:`Metabolism Rate (%/hr)`}),(0,b.jsx)(`input`,{type:`number`,name:`metabolismRate`,step:`0.001`,min:`0.005`,max:`0.040`,value:e.metabolismRate,onChange:s}),(0,b.jsx)(`p`,{className:`help-text`,children:`Standard average is 0.015. Adjust if you know you metabolize faster or slower.`})]})]}),(0,b.jsxs)(`div`,{className:`form-section`,children:[(0,b.jsxs)(`div`,{className:`section-title`,children:[(0,b.jsx)(`span`,{children:`🍹`}),` Drink Presets`]}),(0,b.jsx)(`div`,{className:`presets-list`,children:r.length===0?(0,b.jsx)(`p`,{className:`help-text`,children:`No presets saved yet.`}):r.map((e,t)=>(0,b.jsxs)(`div`,{className:`preset-item`,children:[(0,b.jsxs)(`div`,{className:`preset-info`,children:[(0,b.jsx)(`strong`,{children:e.name}),(0,b.jsxs)(`span`,{children:[e.volume,`ml • `,e.abv,`%`]})]}),(0,b.jsx)(`button`,{className:`remove-preset-btn`,onClick:()=>e.name&&i(e.name),title:`Remove Preset`,children:`✕`})]},t))}),(0,b.jsx)(`p`,{className:`help-text`,children:`Manage your saved drink templates. You can always add more from the "Add Drink" menu.`})]}),(0,b.jsxs)(`div`,{className:`form-section`,children:[(0,b.jsxs)(`div`,{className:`section-title`,children:[(0,b.jsx)(`span`,{children:`💾`}),` Data Management`]}),(0,b.jsxs)(`div`,{className:`data-buttons`,children:[(0,b.jsx)(`button`,{className:`btn btn-secondary`,onClick:()=>{let t={profile:e,drinks:n,presets:r,exportDate:new Date().toISOString(),version:`1.0`},i=new Blob([JSON.stringify(t,null,2)],{type:`application/json`}),a=URL.createObjectURL(i),o=document.createElement(`a`);o.href=a,o.download=`alcoclone-backup-${new Date().toISOString().split(`T`)[0]}.json`,document.body.appendChild(o),o.click(),document.body.removeChild(o),URL.revokeObjectURL(a)},children:`Export Data`}),(0,b.jsx)(`button`,{className:`btn btn-secondary`,onClick:()=>{o.current?.click()},children:`Import Data`}),(0,b.jsx)(`input`,{type:`file`,ref:o,style:{display:`none`},accept:`.json`,onChange:e=>{let t=e.target.files?.[0];if(!t)return;let n=new FileReader;n.onload=t=>{try{let e=t.target?.result,n=JSON.parse(e);window.confirm(`This will overwrite your current profile, drinks, and presets. Continue?`)&&(a(n),alert(`Data imported successfully!`))}catch(e){console.error(`Failed to parse import file:`,e),alert(`Invalid backup file. Please make sure it is a valid JSON exported from this app.`)}e.target.value=``},n.readAsText(t)}})]}),(0,b.jsx)(`p`,{className:`help-text`,children:`Backup your data to a JSON file or restore from a previous backup.`})]})]}),(0,b.jsx)(`style`,{children:`
         .profile-settings {
           padding-bottom: 80px;
         }
@@ -177,6 +177,45 @@ Error generating stack: `+e.message+`
           margin-top: 6px;
           line-height: 1.3;
         }
+        .presets-list {
+          display: flex;
+          flex-direction: column;
+          gap: var(--spacing-xs);
+          margin-bottom: var(--spacing-sm);
+        }
+        .preset-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: rgba(255,255,255,0.03);
+          padding: 8px 12px;
+          border-radius: 4px;
+          border: 1px solid rgba(255,255,255,0.05);
+        }
+        .preset-info {
+          display: flex;
+          flex-direction: column;
+        }
+        .preset-info strong {
+          font-size: 0.9rem;
+        }
+        .preset-info span {
+          font-size: 0.75rem;
+          opacity: 0.6;
+        }
+        .remove-preset-btn {
+          background: transparent;
+          color: var(--error);
+          border: none;
+          padding: 4px 8px;
+          font-size: 1rem;
+          cursor: pointer;
+          opacity: 0.6;
+          transition: opacity 0.2s;
+        }
+        .remove-preset-btn:hover {
+          opacity: 1;
+        }
         .data-buttons {
           display: flex;
           gap: var(--spacing-sm);
@@ -203,7 +242,7 @@ Error generating stack: `+e.message+`
           border-color: var(--primary);
           background: rgba(187, 134, 252, 0.05);
         }
-      `})]})},ue=({isOpen:e,onClose:t})=>{let{presets:n,addDrink:r}=ne(),[i,a]=(0,_.useState)(!1),[o,s]=(0,_.useState)({name:``,volume:330,abv:5}),[c,l]=(0,_.useState)(()=>Date.now());if(!e)return null;let u=e=>{let t=new Date(e),n=t.getTimezoneOffset();return new Date(t.getTime()-n*60*1e3).toISOString().slice(0,16)},d=e=>{l(Date.now()-e*60*1e3)},f=e=>{r({...e,timestamp:c}),t()};return(0,b.jsxs)(`div`,{className:`modal-overlay`,children:[(0,b.jsxs)(`div`,{className:`modal-content card`,children:[(0,b.jsx)(`h2`,{children:`Add Drink`}),(0,b.jsxs)(`div`,{className:`time-selector`,children:[(0,b.jsx)(`label`,{children:`Time of Consumption`}),(0,b.jsxs)(`div`,{className:`quick-offsets`,children:[(0,b.jsx)(`button`,{type:`button`,onClick:()=>l(Date.now()),children:`Now`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>d(30),children:`-30m`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>d(60),children:`-1h`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>d(120),children:`-2h`})]}),(0,b.jsx)(`input`,{type:`datetime-local`,value:u(c),onChange:e=>l(new Date(e.target.value).getTime())})]}),i?(0,b.jsxs)(`form`,{onSubmit:e=>{e.preventDefault(),r({...o,timestamp:c}),a(!1),t()},className:`custom-form`,children:[(0,b.jsxs)(`div`,{className:`form-group`,children:[(0,b.jsx)(`label`,{children:`Name`}),(0,b.jsx)(`input`,{type:`text`,value:o.name,onChange:e=>s({...o,name:e.target.value}),placeholder:`e.g. Cocktail`,required:!0})]}),(0,b.jsxs)(`div`,{className:`form-group`,children:[(0,b.jsx)(`label`,{children:`Volume (ml)`}),(0,b.jsx)(`input`,{type:`number`,value:o.volume,onChange:e=>s({...o,volume:Number(e.target.value)}),required:!0})]}),(0,b.jsxs)(`div`,{className:`form-group`,children:[(0,b.jsx)(`label`,{children:`ABV (%)`}),(0,b.jsx)(`input`,{type:`number`,step:`0.1`,value:o.abv,onChange:e=>s({...o,abv:Number(e.target.value)}),required:!0})]}),(0,b.jsxs)(`div`,{className:`form-actions`,children:[(0,b.jsx)(`button`,{type:`button`,onClick:()=>a(!1),children:`Back`}),(0,b.jsx)(`button`,{type:`submit`,className:`primary-btn`,children:`Add Drink`})]})]}):(0,b.jsxs)(`div`,{className:`presets-grid`,children:[n.map((e,t)=>(0,b.jsxs)(`button`,{className:`preset-btn`,onClick:()=>f(e),children:[(0,b.jsx)(`strong`,{children:e.name}),(0,b.jsxs)(`span`,{children:[e.volume,`ml • `,e.abv,`%`]})]},t)),(0,b.jsx)(`button`,{className:`preset-btn custom-toggle`,onClick:()=>a(!0),children:`Custom...`})]}),(0,b.jsx)(`button`,{className:`close-btn`,onClick:t,children:`Close`})]}),(0,b.jsx)(`style`,{children:`
+      `})]})},ue=({isOpen:e,onClose:t})=>{let{presets:n,addDrink:r,addPreset:i}=ne(),[a,o]=(0,_.useState)(!1),[s,c]=(0,_.useState)({name:``,volume:330,abv:5}),[l,u]=(0,_.useState)(!1),[d,f]=(0,_.useState)(()=>Date.now());if(!e)return null;let p=e=>{let t=new Date(e),n=t.getTimezoneOffset();return new Date(t.getTime()-n*60*1e3).toISOString().slice(0,16)},m=e=>{f(Date.now()-e*60*1e3)},h=e=>{r({...e,timestamp:d}),t()};return(0,b.jsxs)(`div`,{className:`modal-overlay`,children:[(0,b.jsxs)(`div`,{className:`modal-content card`,children:[(0,b.jsx)(`h2`,{children:`Add Drink`}),(0,b.jsxs)(`div`,{className:`time-selector`,children:[(0,b.jsx)(`label`,{children:`Time of Consumption`}),(0,b.jsxs)(`div`,{className:`quick-offsets`,children:[(0,b.jsx)(`button`,{type:`button`,onClick:()=>f(Date.now()),children:`Now`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>m(30),children:`-30m`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>m(60),children:`-1h`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>m(120),children:`-2h`})]}),(0,b.jsx)(`input`,{type:`datetime-local`,value:p(d),onChange:e=>f(new Date(e.target.value).getTime())})]}),a?(0,b.jsxs)(`form`,{onSubmit:e=>{e.preventDefault(),r({...s,timestamp:d}),l&&i(s),o(!1),u(!1),t()},className:`custom-form`,children:[(0,b.jsxs)(`div`,{className:`form-group`,children:[(0,b.jsx)(`label`,{children:`Name`}),(0,b.jsx)(`input`,{type:`text`,value:s.name,onChange:e=>c({...s,name:e.target.value}),placeholder:`e.g. Cocktail`,required:!0})]}),(0,b.jsxs)(`div`,{className:`form-group`,children:[(0,b.jsx)(`label`,{children:`Volume (ml)`}),(0,b.jsx)(`input`,{type:`number`,value:s.volume,onChange:e=>c({...s,volume:Number(e.target.value)}),required:!0})]}),(0,b.jsxs)(`div`,{className:`form-group`,children:[(0,b.jsx)(`label`,{children:`ABV (%)`}),(0,b.jsx)(`input`,{type:`number`,step:`0.1`,value:s.abv,onChange:e=>c({...s,abv:Number(e.target.value)}),required:!0})]}),(0,b.jsx)(`div`,{className:`form-group checkbox-group`,children:(0,b.jsxs)(`label`,{className:`checkbox-label`,children:[(0,b.jsx)(`input`,{type:`checkbox`,checked:l,onChange:e=>u(e.target.checked)}),`Save as preset for future use`]})}),(0,b.jsxs)(`div`,{className:`form-actions`,children:[(0,b.jsx)(`button`,{type:`button`,onClick:()=>o(!1),children:`Back`}),(0,b.jsx)(`button`,{type:`submit`,className:`primary-btn`,children:`Add Drink`})]})]}):(0,b.jsxs)(`div`,{className:`presets-grid`,children:[n.map((e,t)=>(0,b.jsxs)(`button`,{className:`preset-btn`,onClick:()=>h(e),children:[(0,b.jsx)(`strong`,{children:e.name}),(0,b.jsxs)(`span`,{children:[e.volume,`ml • `,e.abv,`%`]})]},t)),(0,b.jsx)(`button`,{className:`preset-btn custom-toggle`,onClick:()=>o(!0),children:`Custom...`})]}),(0,b.jsx)(`button`,{className:`close-btn`,onClick:t,children:`Close`})]}),(0,b.jsx)(`style`,{children:`
         .modal-overlay {
           position: fixed;
           top: 0;
@@ -282,6 +321,21 @@ Error generating stack: `+e.message+`
           font-size: 0.8rem;
           margin-bottom: 4px;
           opacity: 0.8;
+        }
+        .checkbox-group {
+          margin-bottom: var(--spacing-sm);
+        }
+        .checkbox-label {
+          display: flex !important;
+          flex-direction: row !important;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          opacity: 1 !important;
+        }
+        .checkbox-label input {
+          width: auto !important;
+          margin: 0;
         }
         .form-actions {
           display: flex;
