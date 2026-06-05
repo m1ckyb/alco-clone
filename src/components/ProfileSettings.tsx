@@ -1,10 +1,33 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { calculateWidmarkR } from '../utils/bac';
+import { supabase } from '../utils/supabase';
 
 const ProfileSettings: React.FC = () => {
-  const { profile, setProfile, drinks, presets, removePreset, importData } = useAppContext();
+  const { 
+    profile, setProfile, drinks, presets, removePreset, importData,
+    user, lastSynced, isSyncing, signOut, pullFromCloud 
+  } = useAppContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    try {
+      const { error } = authMode === 'login' 
+        ? await supabase.auth.signInWithPassword({ email, password })
+        : await supabase.auth.signUp({ email, password });
+      
+      if (error) setAuthError(error.message);
+    } catch (err: any) {
+      setAuthError(err.message);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -199,6 +222,65 @@ const ProfileSettings: React.FC = () => {
 
         <div className="form-section">
           <div className="section-title">
+            <span>☁️</span> Cloud Sync
+          </div>
+          
+          {!user ? (
+            <div className="auth-container">
+              <p className="help-text" style={{ marginBottom: '12px' }}>
+                Sync your data across devices using a free account.
+              </p>
+              <form onSubmit={handleAuth} className="auth-form">
+                <input 
+                  type="email" 
+                  placeholder="Email" 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  required 
+                />
+                <input 
+                  type="password" 
+                  placeholder="Password" 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  required 
+                />
+                {authError && <p className="error-text">{authError}</p>}
+                <button type="submit" className="btn btn-primary">
+                  {authMode === 'login' ? 'Login' : 'Sign Up'}
+                </button>
+              </form>
+              <button 
+                className="text-btn" 
+                onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
+              >
+                {authMode === 'login' ? 'Need an account? Sign Up' : 'Have an account? Login'}
+              </button>
+            </div>
+          ) : (
+            <div className="sync-status">
+              <div className="status-row">
+                <span>Account:</span>
+                <strong>{user.email}</strong>
+              </div>
+              <div className="status-row">
+                <span>Last Synced:</span>
+                <span>{isSyncing ? 'Syncing...' : (lastSynced || 'Never')}</span>
+              </div>
+              <div className="sync-actions">
+                <button className="btn btn-secondary" onClick={pullFromCloud} disabled={isSyncing}>
+                  Sync Now
+                </button>
+                <button className="btn btn-outline" onClick={signOut}>
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="form-section">
+          <div className="section-title">
             <span>💾</span> Data Management
           </div>
           <div className="data-buttons">
@@ -347,6 +429,50 @@ const ProfileSettings: React.FC = () => {
         .data-buttons .btn:hover {
           border-color: var(--primary);
           color: var(--primary);
+        }
+        .auth-form {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-bottom: 10px;
+        }
+        .auth-form .btn-primary {
+          background: var(--primary);
+          color: var(--on-primary);
+        }
+        .text-btn {
+          background: transparent;
+          color: var(--primary);
+          font-size: 0.8rem;
+          text-decoration: underline;
+          padding: 0;
+          display: block;
+          margin: 0 auto;
+        }
+        .error-text {
+          color: var(--error);
+          font-size: 0.8rem;
+          margin: 0;
+        }
+        .sync-status {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .status-row {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.9rem;
+        }
+        .sync-actions {
+          display: flex;
+          gap: 10px;
+        }
+        .btn-outline {
+          background: transparent;
+          border: 1px solid var(--error);
+          color: var(--error);
+          flex: 1;
         }
         input, select {
           background: rgba(255,255,255,0.03);

@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { Drink, Profile } from '../utils/bac';
+import { supabase } from '../utils/supabase';
+import type { User } from '@supabase/supabase-js';
 
 interface AppContextType {
   profile: Profile;
@@ -12,6 +14,11 @@ interface AppContextType {
   removePreset: (name: string) => void;
   clearHistory: () => void;
   importData: (data: { profile?: Profile; drinks?: Drink[]; presets?: Omit<Drink, 'id' | 'timestamp'>[] }) => void;
+  user: User | null;
+  lastSynced: string | null;
+  isSyncing: boolean;
+  signOut: () => Promise<void>;
+  pullFromCloud: () => Promise<void>;
 }
 
 const DEFAULT_PROFILE: Profile = {
@@ -33,6 +40,10 @@ const DEFAULT_PRESETS: Omit<Drink, 'id' | 'timestamp'>[] = [
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [lastSynced, setLastSynced] = useState<string | null>(localStorage.getItem('alcoclone_last_synced'));
+  const [isSyncing, setIsSyncing] = useState(false);
+
   const [profile, setProfileState] = useState<Profile>(() => {
     const saved = localStorage.getItem('alcoclone_profile');
     try {
@@ -72,6 +83,87 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('alcoclone_presets', JSON.stringify(presets));
   }, [presets]);
 
+  // Auth Listener
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const pushToCloud = useCallback(async () => {
+    if (!user) return;
+    setIsSyncing(true);
+    try {
+      const { error } = await supabase
+        .from('user_data')
+        .upsert({
+          id: user.id,
+          profile,
+          drinks,
+          presets,
+          updated_at: new Date().toISOString(),
+        });
+      
+      if (!error) {
+        const now = new Date().toLocaleString();
+        setLastSynced(now);
+        localStorage.setItem('alcoclone_last_synced', now);
+      }
+    } catch (err) {
+      console.error('Push to cloud failed:', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [user, profile, drinks, presets]);
+
+  const pullFromCloud = useCallback(async () => {
+    if (!user) return;
+    setIsSyncing(true);
+    try {
+      const { data, error } = await supabase
+        .from('user_data')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle(); // Use maybeSingle to handle case where no data exists yet
+      
+      if (data && !error) {
+        if (data.profile) setProfileState(data.profile);
+        if (data.drinks) setDrinks(data.drinks);
+        if (data.presets) setPresets(data.presets);
+        const now = new Date().toLocaleString();
+        setLastSynced(now);
+        localStorage.setItem('alcoclone_last_synced', now);
+      }
+    } catch (err) {
+      console.error('Pull from cloud failed:', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [user]);
+
+  // Initial pull on login
+  useEffect(() => {
+    if (user) {
+      pullFromCloud();
+    }
+  }, [user, pullFromCloud]);
+
+  // Auto-push on changes
+  useEffect(() => {
+    if (user) {
+      const timer = setTimeout(() => {
+        pushToCloud();
+      }, 2000); // Debounce push
+      return () => clearTimeout(timer);
+    }
+  }, [profile, drinks, presets, user, pushToCloud]);
+
   const setProfile = (newProfile: Profile) => setProfileState(newProfile);
 
   const addDrink = (drink: Omit<Drink, 'id'>) => {
@@ -106,13 +198,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (data.presets) setPresets(data.presets);
   };
 
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setLastSynced(null);
+    localStorage.removeItem('alcoclone_last_synced');
+  };
+
   return (
     <AppContext.Provider value={{ 
       profile, setProfile, 
       drinks, addDrink, removeDrink,
       presets, addPreset, removePreset,
       clearHistory,
-      importData
+      importData,
+      user, lastSynced, isSyncing,
+      signOut, pullFromCloud
     }}>
       {children}
     </AppContext.Provider>
