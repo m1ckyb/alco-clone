@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { calculateBAC, calculateTimeToZero, formatBAC } from '../utils/bac';
+import BACGraph from './BACGraph';
 
 const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
   const { drinks, profile } = useAppContext();
@@ -69,6 +70,8 @@ const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
           <h3>{drinks.filter(d => (now - d.timestamp) < 12 * 3600000).length}</h3>
         </div>
       </div>
+
+      <BACGraph drinks={drinks} profile={profile} now={now} />
 
       <button className="add-drink-btn" onClick={onAddClick}>
         + Add Drink

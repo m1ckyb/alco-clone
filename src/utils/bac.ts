@@ -65,6 +65,46 @@ export function calculateTimeToZero(drinks: Drink[], profile: Profile, currentTi
 }
 
 /**
+ * Generates data points for a BAC graph.
+ */
+export function generateBACGraphData(drinks: Drink[], profile: Profile, now: number = Date.now()): { time: number; label: string; bac: number }[] {
+  if (drinks.length === 0) return [];
+
+  const sortedDrinks = [...drinks].sort((a, b) => a.timestamp - b.timestamp);
+  const startTime = sortedDrinks[0].timestamp;
+  const timeToZero = calculateTimeToZero(drinks, profile, now);
+  const endTime = now + (timeToZero * 3600000);
+
+  // Buffer before and after
+  const graphStart = startTime - (30 * 60000); // 30 mins before first drink
+  const graphEnd = endTime + (60 * 60000); // 1 hour after sober
+
+  const data = [];
+  const step = 30 * 60000; // 30 minute intervals
+
+  for (let t = graphStart; t <= graphEnd; t += step) {
+    const bac = calculateBAC(drinks, profile, t);
+    data.push({
+      time: t,
+      label: new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      bac: parseFloat(bac.toFixed(4))
+    });
+    
+    // Ensure we include 'now' specifically
+    if (t < now && t + step > now) {
+      const currentBac = calculateBAC(drinks, profile, now);
+      data.push({
+        time: now,
+        label: 'Now',
+        bac: parseFloat(currentBac.toFixed(4))
+      });
+    }
+  }
+
+  return data;
+}
+
+/**
  * Formats BAC to a standard display (e.g. 0.050)
  */
 export function formatBAC(bac: number): string {
