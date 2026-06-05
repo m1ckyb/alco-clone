@@ -128,7 +128,7 @@ const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
           font-size: 1.2rem;
           background: var(--primary);
           color: var(--on-primary);
-          box-shadow: 0 4px 15px rgba(187, 134, 252, 0.4);
+          box-shadow: 0 4px 15px rgba(0, 59, 111, 0.4);
           margin-top: var(--spacing-lg);
         }
       `}</style>

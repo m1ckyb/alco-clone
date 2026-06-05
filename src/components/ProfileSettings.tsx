@@ -284,7 +284,7 @@ const ProfileSettings: React.FC = () => {
         input:focus, select:focus {
           outline: none;
           border-color: var(--primary);
-          background: rgba(187, 134, 252, 0.05);
+          background: rgba(0, 59, 111, 0.05);
         }
       `}</style>
     </div>
