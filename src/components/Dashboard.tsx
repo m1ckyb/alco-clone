@@ -74,6 +74,9 @@ const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
       <div className="card info-card" style={{ marginTop: 'var(--spacing-md)' }}>
         <span className="label">Total Alcohol Consumed</span>
         <h3>{drinks.reduce((sum, d) => sum + (d.volume * (d.abv / 100) * 0.789), 0).toFixed(1)}g</h3>
+        <p className="help-text" style={{ fontSize: '0.9rem', marginTop: '4px', opacity: 0.8 }}>
+          You should be sober by <strong>{new Date(now + timeToZero * 3600000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
+        </p>
       </div>
 
       <BACGraph drinks={drinks} profile={profile} now={now} />
