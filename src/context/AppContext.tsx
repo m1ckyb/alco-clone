@@ -18,6 +18,7 @@ const DEFAULT_PROFILE: Profile = {
   weight: 75,
   gender: 'male',
   metabolismRate: 0.015,
+  displayUnit: '%',
 };
 
 const DEFAULT_PRESETS: Omit<Drink, 'id' | 'timestamp'>[] = [

@@ -10,6 +10,7 @@ export interface Profile {
   weight: number; // kg
   gender: 'male' | 'female';
   metabolismRate: number; // BAC % reduction per hour, default ~0.015
+  displayUnit: '%' | '‰';
 }
 
 export const GENDER_CONSTANTS = {
@@ -117,8 +118,11 @@ export function generateBACGraphData(drinks: Drink[], profile: Profile, now: num
 }
 
 /**
- * Formats BAC to a standard display (e.g. 0.050)
+ * Formats BAC to a standard display based on unit.
  */
-export function formatBAC(bac: number): string {
+export function formatBAC(bac: number, unit: '%' | '‰' = '%'): string {
+  if (unit === '‰') {
+    return (bac * 10).toFixed(2);
+  }
   return bac.toFixed(3);
 }

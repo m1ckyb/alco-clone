@@ -10,7 +10,9 @@ interface BACGraphProps {
 }
 
 const BACGraph: React.FC<BACGraphProps> = ({ drinks, profile, now }) => {
-  const data = generateBACGraphData(drinks, profile, now);
+  const rawData = generateBACGraphData(drinks, profile, now);
+  const factor = profile.displayUnit === '‰' ? 10 : 1;
+  const data = rawData.map(d => ({ ...d, bac: d.bac * factor }));
 
   if (data.length === 0) {
     return (
@@ -25,7 +27,7 @@ const BACGraph: React.FC<BACGraphProps> = ({ drinks, profile, now }) => {
       return (
         <div className="custom-tooltip">
           <p className="label">{payload[0].payload.label}</p>
-          <p className="bac">{payload[0].value.toFixed(3)}% BAC</p>
+          <p className="bac">{payload[0].value.toFixed(profile.displayUnit === '‰' ? 2 : 3)}{profile.displayUnit} BAC</p>
         </div>
       );
     }
@@ -55,7 +57,7 @@ const BACGraph: React.FC<BACGraphProps> = ({ drinks, profile, now }) => {
             <YAxis 
               fontSize={10} 
               tick={{ fill: '#888' }}
-              domain={[0, 'dataMax + 0.02']}
+              domain={[0, (dataMax: number) => Math.max(0.1 * factor, dataMax + (0.02 * factor))]}
               width={35}
             />
             <Tooltip content={<CustomTooltip />} />

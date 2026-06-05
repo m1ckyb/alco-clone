@@ -53,7 +53,7 @@ const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
       <div className="bac-display card" style={{ borderColor: getStatusColor(currentBAC), borderLeft: '4px solid' }}>
         <span className="label">Current BAC</span>
         <h1 className="bac-value" style={{ color: getStatusColor(currentBAC) }}>
-          {formatBAC(currentBAC)}%
+          {formatBAC(currentBAC, profile.displayUnit)}{profile.displayUnit}
         </h1>
         <div className="status-badge" style={{ backgroundColor: getStatusColor(currentBAC) }}>
           {getStatusText(currentBAC)}
@@ -69,6 +69,11 @@ const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
           <span className="label">Active Drinks</span>
           <h3>{drinks.filter(d => (now - d.timestamp) < 12 * 3600000).length}</h3>
         </div>
+      </div>
+
+      <div className="card info-card" style={{ marginTop: 'var(--spacing-md)' }}>
+        <span className="label">Total Alcohol Consumed</span>
+        <h3>{drinks.reduce((sum, d) => sum + (d.volume * (d.abv / 100) * 0.789), 0).toFixed(1)}g</h3>
       </div>
 
       <BACGraph drinks={drinks} profile={profile} now={now} />

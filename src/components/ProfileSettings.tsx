@@ -97,6 +97,17 @@ const ProfileSettings: React.FC = () => {
             />
             <p className="help-text">Alcohol concentration is inversely proportional to body weight.</p>
           </div>
+
+          <div className="form-group">
+            <label>Display Unit</label>
+            <div className="select-wrapper">
+              <select name="displayUnit" value={profile.displayUnit} onChange={handleChange}>
+                <option value="%">% (Percentage, e.g. 0.050%)</option>
+                <option value="‰">‰ (Per Mille, e.g. 0.50‰)</option>
+              </select>
+            </div>
+            <p className="help-text">Choose how BAC values are displayed throughout the app.</p>
+          </div>
         </div>
 
         <div className="form-section">
@@ -104,17 +115,26 @@ const ProfileSettings: React.FC = () => {
             <span>⚡</span> Metabolism
           </div>
           <div className="form-group">
-            <label>Metabolism Rate (%/hr)</label>
+            <label>Metabolism Rate ({profile.displayUnit}/hr)</label>
             <input 
               type="number" 
               name="metabolismRate" 
               step="0.001"
-              min="0.005"
-              max="0.040"
-              value={profile.metabolismRate} 
-              onChange={handleChange} 
+              min={profile.displayUnit === '‰' ? 0.05 : 0.005}
+              max={profile.displayUnit === '‰' ? 0.40 : 0.040}
+              value={profile.displayUnit === '‰' ? profile.metabolismRate * 10 : profile.metabolismRate} 
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                setProfile({
+                  ...profile,
+                  metabolismRate: profile.displayUnit === '‰' ? val / 10 : val
+                });
+              }} 
             />
-            <p className="help-text">Standard average is 0.015. Adjust if you know you metabolize faster or slower.</p>
+            <p className="help-text">
+              Standard average is {profile.displayUnit === '‰' ? '0.15' : '0.015'}. 
+              Adjust if you know you metabolize faster or slower.
+            </p>
           </div>
         </div>
 
