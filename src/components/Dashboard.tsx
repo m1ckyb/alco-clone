@@ -42,6 +42,13 @@ const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
     return `${h}h ${m}m`;
   };
 
+  const totalAlcohol = drinks.reduce((sum, d) => sum + (d.volume * (d.abv / 100) * 0.789), 0);
+  const firstDrinkTime = drinks.length > 0 ? Math.min(...drinks.map(d => d.timestamp)) : now;
+  // Safety rule: 1 standard drink (10g) per hour from the first drink
+  const safetySoberTime = firstDrinkTime + (totalAlcohol / 10) * 3600000;
+  const standardSoberTime = now + timeToZero * 3600000;
+  const isSafetyBufferRelevant = totalAlcohol > 0 && safetySoberTime > (standardSoberTime + 1800000); // 30 min diff threshold
+
   return (
     <div className="dashboard">
       <div className="profile-summary">
@@ -73,11 +80,23 @@ const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
 
       <div className="card info-card" style={{ marginTop: 'var(--spacing-md)' }}>
         <span className="label">Total Alcohol Consumed</span>
-        <h3>{drinks.reduce((sum, d) => sum + (d.volume * (d.abv / 100) * 0.789), 0).toFixed(1)}g</h3>
+        <h3>{totalAlcohol.toFixed(1)}g</h3>
         <p className="help-text" style={{ fontSize: '0.9rem', marginTop: '4px', opacity: 0.8 }}>
-          You should be sober by <strong>{new Date(now + timeToZero * 3600000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
+          You should be sober by <strong>{new Date(standardSoberTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
         </p>
       </div>
+
+      {isSafetyBufferRelevant && (
+        <div className="card safety-card" style={{ marginTop: 'var(--spacing-sm)', background: 'rgba(255, 152, 0, 0.15)', borderColor: 'rgba(255, 152, 0, 0.4)', borderLeft: '4px solid #ff9800', textAlign: 'left' }}>
+          <span className="label" style={{ color: '#ff9800', fontWeight: 'bold' }}>⚠️ Safety Buffer (1 Drink/Hr Rule)</span>
+          <p style={{ fontSize: '0.9rem', margin: '6px 0 0 0', color: '#ff9800' }}>
+            Govt. guidelines suggest you might not be safe until <strong>{new Date(safetySoberTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
+          </p>
+          <p className="help-text" style={{ fontSize: '0.75rem', marginTop: '6px', opacity: 0.8, color: '#eee' }}>
+            The "1 standard drink per hour" rule is a safer, more conservative estimate for larger body weights.
+          </p>
+        </div>
+      )}
 
       <BACGraph drinks={drinks} profile={profile} now={now} />
 
