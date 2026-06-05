@@ -7,16 +7,19 @@ interface BACGraphProps {
   drinks: Drink[];
   profile: Profile;
   now: number;
+  showNowLine?: boolean;
+  title?: string;
+  minimal?: boolean;
 }
 
-const BACGraph: React.FC<BACGraphProps> = ({ drinks, profile, now }) => {
+const BACGraph: React.FC<BACGraphProps> = ({ drinks, profile, now, showNowLine = true, title = "BAC Timeline", minimal = false }) => {
   const rawData = generateBACGraphData(drinks, profile, now);
   const factor = profile.displayUnit === '‰' ? 10 : 1;
   const data = rawData.map(d => ({ ...d, bac: d.bac * factor }));
 
   if (data.length === 0) {
     return (
-      <div className="card graph-card empty-graph">
+      <div className={minimal ? "graph-container minimal empty-graph" : "card graph-card empty-graph"}>
         <p>No drink data to display</p>
       </div>
     );
@@ -35,9 +38,9 @@ const BACGraph: React.FC<BACGraphProps> = ({ drinks, profile, now }) => {
   };
 
   return (
-    <div className="card graph-card">
-      <span className="label">BAC Timeline</span>
-      <div style={{ width: '100%', height: 200, marginTop: '1rem' }}>
+    <div className={minimal ? "graph-container minimal" : "card graph-card"}>
+      <span className="label">{title}</span>
+      <div style={{ width: '100%', height: minimal ? 150 : 200, marginTop: minimal ? '0.5rem' : '1rem' }}>
         <ResponsiveContainer>
           <AreaChart data={data}>
             <defs>
@@ -49,20 +52,20 @@ const BACGraph: React.FC<BACGraphProps> = ({ drinks, profile, now }) => {
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#444" />
             <XAxis 
               dataKey="label" 
-              fontSize={10} 
+              fontSize={minimal ? 8 : 10} 
               tick={{ fill: '#888' }}
               interval="preserveStartEnd"
-              minTickGap={30}
+              minTickGap={minimal ? 40 : 30}
             />
             <YAxis 
-              fontSize={10} 
+              fontSize={minimal ? 8 : 10} 
               tick={{ fill: '#888' }}
               tickFormatter={(val) => val.toFixed(2)}
               domain={[0, (dataMax: number) => Math.max(0.1 * factor, dataMax + (0.01 * factor))]}
-              width={35}
+              width={minimal ? 30 : 35}
             />
             <Tooltip content={<CustomTooltip />} />
-            <ReferenceLine x="Now" stroke="var(--secondary)" strokeDasharray="3 3" />
+            {showNowLine && <ReferenceLine x="Now" stroke="var(--secondary)" strokeDasharray="3 3" />}
             <Area 
               type="monotone" 
               dataKey="bac" 
@@ -78,6 +81,10 @@ const BACGraph: React.FC<BACGraphProps> = ({ drinks, profile, now }) => {
         .graph-card {
           margin-top: var(--spacing-md);
           padding: var(--spacing-md);
+        }
+        .graph-container.minimal {
+          padding: 0;
+          margin-bottom: var(--spacing-md);
         }
         .empty-graph {
           display: flex;

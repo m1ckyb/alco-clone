@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { groupIntoSessions, formatBAC } from '../utils/bac';
+import BACGraph from './BACGraph';
 
 const History: React.FC = () => {
   const { drinks, profile, removeDrink, clearHistory } = useAppContext();
@@ -63,6 +64,14 @@ const History: React.FC = () => {
 
               {expandedSession === session.id && (
                 <div className="session-details">
+                  <BACGraph 
+                    drinks={session.drinks} 
+                    profile={profile} 
+                    now={session.endTime} 
+                    showNowLine={false}
+                    title="Session BAC Curve"
+                    minimal={true}
+                  />
                   <div className="drinks-list">
                     {session.drinks.map(drink => (
                       <div key={drink.id} className="drink-item">
