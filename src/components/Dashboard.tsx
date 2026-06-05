@@ -74,7 +74,12 @@ const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
         </div>
         <div className="card info-card">
           <span className="label">Active Drinks</span>
-          <h3>{drinks.filter(d => (now - d.timestamp) < 12 * 3600000).length}</h3>
+          <h3>
+            {drinks.filter(d => (now - d.timestamp) < 24 * 3600000).length} 
+            <small style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: 'normal', display: 'block', marginTop: '4px' }}>
+              ({(totalAlcohol / 10).toFixed(1)} standard)
+            </small>
+          </h3>
         </div>
       </div>
 
