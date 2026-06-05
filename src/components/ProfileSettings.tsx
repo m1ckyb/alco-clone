@@ -1,14 +1,35 @@
 import React, { useRef, useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { calculateWidmarkR } from '../utils/bac';
+import type { Drink } from '../utils/bac';
 import { supabase } from '../utils/supabase';
 
 const ProfileSettings: React.FC = () => {
   const { 
-    profile, setProfile, drinks, presets, removePreset, importData,
+    profile, setProfile, drinks, presets, removePreset, updatePreset, importData,
     user, lastSynced, isSyncing, signOut, pullFromCloud 
   } = useAppContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [editingPresetName, setEditingPresetName] = useState<string | null>(null);
+  const [tempPreset, setTempPreset] = useState<{ name: string; volume: number; abv: number } | null>(null);
+
+  const startEditPreset = (preset: Omit<Drink, 'id' | 'timestamp'>) => {
+    setEditingPresetName(preset.name || '');
+    setTempPreset({ 
+      name: preset.name || '', 
+      volume: preset.volume, 
+      abv: preset.abv 
+    });
+  };
+
+  const savePresetEdit = () => {
+    if (editingPresetName && tempPreset) {
+      updatePreset(editingPresetName, tempPreset);
+      setEditingPresetName(null);
+      setTempPreset(null);
+    }
+  };
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -202,17 +223,58 @@ const ProfileSettings: React.FC = () => {
             ) : (
               presets.map((preset, index) => (
                 <div key={index} className="preset-item">
-                  <div className="preset-info">
-                    <strong>{preset.name}</strong>
-                    <span>{preset.volume}ml • {preset.abv}%</span>
-                  </div>
-                  <button 
-                    className="remove-preset-btn" 
-                    onClick={() => preset.name && removePreset(preset.name)}
-                    title="Remove Preset"
-                  >
-                    ✕
-                  </button>
+                  {editingPresetName === preset.name ? (
+                    <div className="preset-edit-form">
+                      <input 
+                        type="text" 
+                        value={tempPreset?.name} 
+                        onChange={e => setTempPreset({...tempPreset!, name: e.target.value})} 
+                        placeholder="Name"
+                      />
+                      <div className="side-by-side">
+                        <input 
+                          type="number" 
+                          value={tempPreset?.volume} 
+                          onChange={e => setTempPreset({...tempPreset!, volume: Number(e.target.value)})} 
+                          placeholder="ml"
+                        />
+                        <input 
+                          type="number" 
+                          step="0.1"
+                          value={tempPreset?.abv} 
+                          onChange={e => setTempPreset({...tempPreset!, abv: Number(e.target.value)})} 
+                          placeholder="%"
+                        />
+                      </div>
+                      <div className="edit-actions">
+                        <button className="btn btn-primary" onClick={savePresetEdit}>Save</button>
+                        <button className="btn text-btn" onClick={() => setEditingPresetName(null)}>Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="preset-info">
+                        <strong>{preset.name}</strong>
+                        <span>{preset.volume}ml • {preset.abv}%</span>
+                      </div>
+                      <div className="preset-actions">
+                        <button 
+                          className="edit-preset-btn" 
+                          onClick={() => startEditPreset(preset)}
+                          title="Edit Preset"
+                        >
+                          ✎
+                        </button>
+                        <button 
+                          className="remove-preset-btn" 
+                          onClick={() => preset.name && removePreset(preset.name)}
+                          title="Remove Preset"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))
             )}
@@ -412,6 +474,46 @@ const ProfileSettings: React.FC = () => {
         }
         .remove-preset-btn:hover {
           opacity: 1;
+        }
+        .preset-actions {
+          display: flex;
+          gap: 8px;
+        }
+        .edit-preset-btn {
+          background: transparent;
+          color: var(--primary);
+          border: none;
+          padding: 4px 8px;
+          font-size: 1rem;
+          cursor: pointer;
+          opacity: 0.6;
+          transition: opacity 0.2s;
+        }
+        .edit-preset-btn:hover {
+          opacity: 1;
+        }
+        .preset-edit-form {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          padding: 4px 0;
+        }
+        .preset-edit-form input {
+          width: 100%;
+        }
+        .side-by-side {
+          display: flex;
+          gap: 8px;
+        }
+        .edit-actions {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+        }
+        .edit-actions .btn-primary {
+          padding: 4px 12px;
+          font-size: 0.8rem;
         }
         .data-buttons {
           display: flex;
