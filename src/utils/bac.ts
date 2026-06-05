@@ -141,6 +141,70 @@ export function generateBACGraphData(drinks: Drink[], profile: Profile, now: num
   return data;
 }
 
+export interface Session {
+  id: string;
+  drinks: Drink[];
+  startTime: number;
+  endTime: number;
+  totalAlcoholGrams: number;
+  peakBAC: number;
+}
+
+/**
+ * Groups drinks into logical sessions based on a 12-hour gap threshold.
+ */
+export function groupIntoSessions(drinks: Drink[], profile: Profile): Session[] {
+  if (drinks.length === 0) return [];
+
+  const sortedDrinks = [...drinks].sort((a, b) => a.timestamp - b.timestamp);
+  const sessions: Session[] = [];
+  let currentSessionDrinks: Drink[] = [sortedDrinks[0]];
+
+  for (let i = 1; i < sortedDrinks.length; i++) {
+    const prevDrink = sortedDrinks[i - 1];
+    const currentDrink = sortedDrinks[i];
+    const gap = currentDrink.timestamp - prevDrink.timestamp;
+
+    if (gap > 12 * 3600000) {
+      // Gap > 12 hours, start new session
+      sessions.push(createSessionObject(currentSessionDrinks, profile));
+      currentSessionDrinks = [currentDrink];
+    } else {
+      currentSessionDrinks.push(currentDrink);
+    }
+  }
+
+  sessions.push(createSessionObject(currentSessionDrinks, profile));
+  
+  // Return sessions sorted newest first
+  return sessions.sort((a, b) => b.startTime - a.startTime);
+}
+
+function createSessionObject(drinks: Drink[], profile: Profile): Session {
+  const totalAlcoholGrams = drinks.reduce((sum, d) => sum + (d.volume * (d.abv / 100) * ETHANOL_DENSITY), 0);
+  
+  // Calculate Peak BAC during this specific session
+  let peakBAC = 0;
+  const startTime = drinks[0].timestamp;
+  const lastDrinkTime = drinks[drinks.length - 1].timestamp;
+  const endTime = lastDrinkTime + (calculateTimeToZero(drinks, profile, lastDrinkTime) * 3600000);
+
+  // Sample BAC every 15 mins to find peak
+  for (let t = startTime; t <= endTime; t += 15 * 60000) {
+    const bac = calculateBAC(drinks, profile, t);
+    if (bac > peakBAC) peakBAC = bac;
+  }
+
+  return {
+    id: `session-${startTime}`,
+    drinks: [...drinks].sort((a, b) => b.timestamp - a.timestamp),
+    startTime,
+    endTime,
+    totalAlcoholGrams,
+    peakBAC
+  };
+}
+
 /**
  * Formats BAC to a standard display based on unit.
  */
