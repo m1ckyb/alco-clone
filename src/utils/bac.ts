@@ -29,29 +29,41 @@ export const ETHANOL_DENSITY = 0.789; // g/ml
 export function calculateBAC(drinks: Drink[], profile: Profile, currentTime: number = Date.now()): number {
   if (drinks.length === 0) return 0;
 
-  // Filter drinks that haven't happened yet (if any)
+  // Filter drinks that haven't happened yet
   const pastDrinks = drinks.filter(d => d.timestamp <= currentTime);
   if (pastDrinks.length === 0) return 0;
 
-  // Sort drinks by timestamp to find the start
+  // Sort drinks chronologically
   const sortedDrinks = [...pastDrinks].sort((a, b) => a.timestamp - b.timestamp);
-  const firstDrinkTime = sortedDrinks[0].timestamp;
-  const hoursSinceFirstDrink = (currentTime - firstDrinkTime) / (1000 * 60 * 60);
-
-  let totalAlcoholGrams = 0;
-  for (const drink of sortedDrinks) {
-    totalAlcoholGrams += drink.volume * (drink.abv / 100) * ETHANOL_DENSITY;
-  }
-
+  
   const weightInGrams = profile.weight * 1000;
   const r = GENDER_CONSTANTS[profile.gender];
+  
+  let currentBAC = 0;
+  let lastTime = sortedDrinks[0].timestamp;
 
-  // Widmark Formula
-  const peakBAC = (totalAlcoholGrams / (weightInGrams * r)) * 100;
-  const metabolized = profile.metabolismRate * hoursSinceFirstDrink;
+  for (const drink of sortedDrinks) {
+    // 1. Calculate hours since the last event (drink)
+    const hoursPassed = (drink.timestamp - lastTime) / (1000 * 60 * 60);
+    
+    // 2. Subtract metabolized BAC since the last event
+    currentBAC -= profile.metabolismRate * hoursPassed;
+    if (currentBAC < 0) currentBAC = 0;
 
-  const currentBAC = Math.max(0, peakBAC - metabolized);
-  return currentBAC;
+    // 3. Add the contribution of the new drink
+    const alcoholGrams = drink.volume * (drink.abv / 100) * ETHANOL_DENSITY;
+    const addedBAC = (alcoholGrams / (weightInGrams * r)) * 100;
+    currentBAC += addedBAC;
+
+    // 4. Update the tracker time
+    lastTime = drink.timestamp;
+  }
+
+  // 5. Final metabolism from the last drink to the current time
+  const finalHoursPassed = (currentTime - lastTime) / (1000 * 60 * 60);
+  currentBAC -= profile.metabolismRate * finalHoursPassed;
+
+  return Math.max(0, currentBAC);
 }
 
 /**
