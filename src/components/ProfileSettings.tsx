@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
+import { calculateWidmarkR } from '../utils/bac';
 
 const ProfileSettings: React.FC = () => {
   const { profile, setProfile, drinks, presets, removePreset, importData } = useAppContext();
@@ -9,7 +10,7 @@ const ProfileSettings: React.FC = () => {
     const { name, value } = e.target;
     setProfile({
       ...profile,
-      [name]: name === 'weight' || name === 'metabolismRate' ? Number(value) : value
+      [name]: name === 'weight' || name === 'metabolismRate' || name === 'height' || name === 'age' ? Number(value) : value
     });
   };
 
@@ -96,6 +97,36 @@ const ProfileSettings: React.FC = () => {
               onChange={handleChange} 
             />
             <p className="help-text">Alcohol concentration is inversely proportional to body weight.</p>
+          </div>
+
+          <div className="form-group">
+            <label>Height (cm)</label>
+            <input 
+              type="number" 
+              name="height" 
+              min="50"
+              max="250"
+              value={profile.height} 
+              onChange={handleChange} 
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Age (years)</label>
+            <input 
+              type="number" 
+              name="age" 
+              min="1"
+              max="120"
+              value={profile.age} 
+              onChange={handleChange} 
+            />
+            <p className="help-text">Height and Age are used by the Watson formula to calculate your body water ratio (r) more accurately.</p>
+          </div>
+
+          <div className="info-box">
+            <span className="label">Current Body Water Ratio (r)</span>
+            <strong className="r-value">{calculateWidmarkR(profile).toFixed(3)}</strong>
           </div>
 
           <div className="form-group">
@@ -240,6 +271,26 @@ const ProfileSettings: React.FC = () => {
           opacity: 0.5;
           margin-top: 6px;
           line-height: 1.3;
+        }
+        .info-box {
+          background: rgba(0, 59, 111, 0.2);
+          padding: var(--spacing-md);
+          border-radius: var(--border-radius);
+          margin-bottom: var(--spacing-md);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border: 1px solid rgba(0, 59, 111, 0.3);
+        }
+        .info-box .label {
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          opacity: 0.8;
+          margin-bottom: 0;
+        }
+        .r-value {
+          color: var(--primary);
+          font-size: 1.2rem;
         }
         .presets-list {
           display: flex;

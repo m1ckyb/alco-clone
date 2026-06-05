@@ -11,6 +11,8 @@ export interface Profile {
   gender: 'male' | 'female';
   metabolismRate: number; // BAC % reduction per hour, default ~0.015
   displayUnit: '%' | '‰';
+  height: number; // cm
+  age: number; // years
 }
 
 export const GENDER_CONSTANTS = {
@@ -19,6 +21,28 @@ export const GENDER_CONSTANTS = {
 };
 
 export const ETHANOL_DENSITY = 0.789; // g/ml
+
+/**
+ * Calculates the Widmark r factor using Watson formula if possible.
+ * Fallback to standard averages if height/age are invalid.
+ */
+export function calculateWidmarkR(profile: Profile): number {
+  const { weight, height, age, gender } = profile;
+
+  if (gender === 'male') {
+    // Watson Formula (Male)
+    const tbw = 2.447 - (0.09156 * age) + (0.1074 * height) + (0.3362 * weight);
+    const r = tbw / (weight * 0.8);
+    // Sanity check: r for men is usually between 0.60 and 0.80
+    return Math.min(Math.max(r, 0.5), 0.9);
+  } else {
+    // Watson Formula (Female)
+    const tbw = -2.097 + (0.1069 * height) + (0.2466 * weight);
+    const r = tbw / (weight * 0.8);
+    // Sanity check: r for women is usually between 0.45 and 0.70
+    return Math.min(Math.max(r, 0.4), 0.8);
+  }
+}
 
 /**
  * Calculates current BAC based on Widmark formula.
@@ -36,10 +60,10 @@ export function calculateBAC(drinks: Drink[], profile: Profile, currentTime: num
 
   // Sort drinks chronologically
   const sortedDrinks = [...pastDrinks].sort((a, b) => a.timestamp - b.timestamp);
-  
+
   const weightInGrams = profile.weight * 1000;
-  const r = GENDER_CONSTANTS[profile.gender];
-  
+  const r = calculateWidmarkR(profile);
+
   let currentBAC = 0;
   let lastTime = sortedDrinks[0].timestamp;
 
