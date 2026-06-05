@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
 
 const ProfileSettings: React.FC = () => {
-  const { profile, setProfile, drinks, presets, importData } = useAppContext();
+  const { profile, setProfile, drinks, presets, removePreset, importData } = useAppContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -120,6 +120,34 @@ const ProfileSettings: React.FC = () => {
 
         <div className="form-section">
           <div className="section-title">
+            <span>🍹</span> Drink Presets
+          </div>
+          <div className="presets-list">
+            {presets.length === 0 ? (
+              <p className="help-text">No presets saved yet.</p>
+            ) : (
+              presets.map((preset, index) => (
+                <div key={index} className="preset-item">
+                  <div className="preset-info">
+                    <strong>{preset.name}</strong>
+                    <span>{preset.volume}ml • {preset.abv}%</span>
+                  </div>
+                  <button 
+                    className="remove-preset-btn" 
+                    onClick={() => preset.name && removePreset(preset.name)}
+                    title="Remove Preset"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+          <p className="help-text">Manage your saved drink templates. You can always add more from the "Add Drink" menu.</p>
+        </div>
+
+        <div className="form-section">
+          <div className="section-title">
             <span>💾</span> Data Management
           </div>
           <div className="data-buttons">
@@ -192,6 +220,45 @@ const ProfileSettings: React.FC = () => {
           opacity: 0.5;
           margin-top: 6px;
           line-height: 1.3;
+        }
+        .presets-list {
+          display: flex;
+          flex-direction: column;
+          gap: var(--spacing-xs);
+          margin-bottom: var(--spacing-sm);
+        }
+        .preset-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: rgba(255,255,255,0.03);
+          padding: 8px 12px;
+          border-radius: 4px;
+          border: 1px solid rgba(255,255,255,0.05);
+        }
+        .preset-info {
+          display: flex;
+          flex-direction: column;
+        }
+        .preset-info strong {
+          font-size: 0.9rem;
+        }
+        .preset-info span {
+          font-size: 0.75rem;
+          opacity: 0.6;
+        }
+        .remove-preset-btn {
+          background: transparent;
+          color: var(--error);
+          border: none;
+          padding: 4px 8px;
+          font-size: 1rem;
+          cursor: pointer;
+          opacity: 0.6;
+          transition: opacity 0.2s;
+        }
+        .remove-preset-btn:hover {
+          opacity: 1;
         }
         .data-buttons {
           display: flex;

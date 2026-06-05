@@ -3,9 +3,10 @@ import { useAppContext } from '../context/AppContext';
 import type { Drink } from '../utils/bac';
 
 const DrinkLogger: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-  const { presets, addDrink } = useAppContext();
+  const { presets, addDrink, addPreset } = useAppContext();
   const [isCustom, setIsCustom] = useState(false);
   const [customDrink, setCustomDrink] = useState({ name: '', volume: 330, abv: 5 });
+  const [saveAsPreset, setSaveAsPreset] = useState(false);
   const [timestamp, setTimestamp] = useState(() => Date.now());
 
   if (!isOpen) return null;
@@ -30,7 +31,11 @@ const DrinkLogger: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
   const handleAddCustom = (e: React.FormEvent) => {
     e.preventDefault();
     addDrink({ ...customDrink, timestamp });
+    if (saveAsPreset) {
+      addPreset(customDrink);
+    }
     setIsCustom(false);
+    setSaveAsPreset(false);
     onClose();
   };
 
@@ -96,6 +101,16 @@ const DrinkLogger: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
                 onChange={e => setCustomDrink({...customDrink, abv: Number(e.target.value)})} 
                 required
               />
+            </div>
+            <div className="form-group checkbox-group">
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={saveAsPreset} 
+                  onChange={e => setSaveAsPreset(e.target.checked)} 
+                />
+                Save as preset for future use
+              </label>
             </div>
             <div className="form-actions">
               <button type="button" onClick={() => setIsCustom(false)}>Back</button>
@@ -186,6 +201,21 @@ const DrinkLogger: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
           font-size: 0.8rem;
           margin-bottom: 4px;
           opacity: 0.8;
+        }
+        .checkbox-group {
+          margin-bottom: var(--spacing-sm);
+        }
+        .checkbox-label {
+          display: flex !important;
+          flex-direction: row !important;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          opacity: 1 !important;
+        }
+        .checkbox-label input {
+          width: auto !important;
+          margin: 0;
         }
         .form-actions {
           display: flex;
