@@ -57,7 +57,8 @@ const BACGraph: React.FC<BACGraphProps> = ({ drinks, profile, now }) => {
             <YAxis 
               fontSize={10} 
               tick={{ fill: '#888' }}
-              domain={[0, (dataMax: number) => Math.max(0.1 * factor, dataMax + (0.02 * factor))]}
+              tickFormatter={(val) => val.toFixed(2)}
+              domain={[0, (dataMax: number) => Math.max(0.1 * factor, dataMax + (0.01 * factor))]}
               width={35}
             />
             <Tooltip content={<CustomTooltip />} />
