@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { groupIntoSessions, formatBAC } from '../utils/bac';
+import type { Drink } from '../utils/bac';
 import BACGraph from './BACGraph';
 
-const History: React.FC = () => {
+const History: React.FC<{ onEditClick: (drink: Drink) => void }> = ({ onEditClick }) => {
   const { drinks, profile, removeDrink, clearHistory } = useAppContext();
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
 
@@ -80,9 +81,14 @@ const History: React.FC = () => {
                           <strong>{drink.name || 'Drink'}</strong>
                           <span className="details">{drink.volume}ml • {drink.abv}%</span>
                         </div>
-                        <button className="delete-btn" onClick={() => removeDrink(drink.id)}>
-                          &times;
-                        </button>
+                        <div className="drink-actions">
+                          <button className="edit-btn" onClick={() => onEditClick(drink)}>
+                            ✎
+                          </button>
+                          <button className="delete-btn" onClick={() => removeDrink(drink.id)}>
+                            &times;
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -183,6 +189,18 @@ const History: React.FC = () => {
         }
         .drink-info .details {
           opacity: 0.6;
+        }
+        .drink-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .edit-btn {
+          background: transparent;
+          color: var(--primary);
+          font-size: 1rem;
+          opacity: 0.6;
+          padding: 4px;
         }
         .delete-btn {
           background: transparent;

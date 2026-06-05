@@ -5,10 +5,22 @@ import Dashboard from './components/Dashboard';
 import History from './components/History';
 import ProfileSettings from './components/ProfileSettings';
 import DrinkLogger from './components/DrinkLogger';
+import type { Drink } from './utils/bac';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [isLoggerOpen, setIsLoggerOpen] = useState(false);
+  const [editingDrink, setEditingDrink] = useState<Drink | undefined>(undefined);
+
+  const openLogger = (drink?: Drink) => {
+    setEditingDrink(drink);
+    setIsLoggerOpen(true);
+  };
+
+  const closeLogger = () => {
+    setIsLoggerOpen(false);
+    setEditingDrink(undefined);
+  };
 
   return (
     <>
@@ -18,15 +30,16 @@ function App() {
 
       <main>
         {currentView === 'dashboard' && (
-          <Dashboard onAddClick={() => setIsLoggerOpen(true)} />
+          <Dashboard onAddClick={() => openLogger()} />
         )}
-        {currentView === 'history' && <History />}
+        {currentView === 'history' && <History onEditClick={openLogger} />}
         {currentView === 'profile' && <ProfileSettings />}
       </main>
 
       <DrinkLogger 
         isOpen={isLoggerOpen} 
-        onClose={() => setIsLoggerOpen(false)} 
+        onClose={closeLogger}
+        editDrink={editingDrink}
       />
 
       <NavBar currentView={currentView} setView={setCurrentView} />

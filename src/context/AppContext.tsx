@@ -9,9 +9,11 @@ interface AppContextType {
   drinks: Drink[];
   addDrink: (drink: Omit<Drink, 'id'>) => void;
   removeDrink: (id: string) => void;
+  updateDrink: (id: string, updates: Partial<Drink>) => void;
   presets: Omit<Drink, 'id' | 'timestamp'>[];
   addPreset: (preset: Omit<Drink, 'id' | 'timestamp'>) => void;
   removePreset: (name: string) => void;
+  updatePreset: (name: string, updates: Partial<Omit<Drink, 'id' | 'timestamp'>>) => void;
   clearHistory: () => void;
   importData: (data: { profile?: Profile; drinks?: Drink[]; presets?: Omit<Drink, 'id' | 'timestamp'>[] }) => void;
   user: User | null;
@@ -178,6 +180,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDrinks(prev => prev.filter(d => d.id !== id));
   };
 
+  const updateDrink = (id: string, updates: Partial<Drink>) => {
+    setDrinks(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d));
+  };
+
   const addPreset = (preset: Omit<Drink, 'id' | 'timestamp'>) => {
     setPresets(prev => [...prev, preset]);
   };
@@ -185,6 +191,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const removePreset = (name: string) => {
     setPresets(prev => prev.filter(p => p.name !== name));
   };
+
+  const updatePreset = (name: string, updates: Partial<Omit<Drink, 'id' | 'timestamp'>>) => {
+    setPresets(prev => prev.map(p => p.name === name ? { ...p, ...updates } : p));
+  };
+
+  // One-time data repair for common errors (like 365ml DBL-Black)
+  useEffect(() => {
+    const hasRepaired = localStorage.getItem('alcoclone_repaired_365');
+    if (!hasRepaired && drinks.length > 0) {
+      let repaired = false;
+      const newDrinks = drinks.map(d => {
+        if (d.name?.toLowerCase().includes('black') && d.volume === 365) {
+          repaired = true;
+          return { ...d, volume: 375 };
+        }
+        return d;
+      });
+
+      const newPresets = presets.map(p => {
+        if (p.name?.toLowerCase().includes('black') && p.volume === 365) {
+          repaired = true;
+          return { ...p, volume: 375 };
+        }
+        return p;
+      });
+
+      if (repaired) {
+        setDrinks(newDrinks);
+        setPresets(newPresets);
+      }
+      localStorage.setItem('alcoclone_repaired_365', 'true');
+    }
+  }, [drinks, presets]);
 
   const clearHistory = () => {
     if (window.confirm('Are you sure you want to clear all drink history?')) {
@@ -208,8 +247,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <AppContext.Provider value={{ 
       profile, setProfile, 
-      drinks, addDrink, removeDrink,
-      presets, addPreset, removePreset,
+      drinks, addDrink, removeDrink, updateDrink,
+      presets, addPreset, removePreset, updatePreset,
       clearHistory,
       importData,
       user, lastSynced, isSyncing,

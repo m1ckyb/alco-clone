@@ -1,13 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import type { Drink } from '../utils/bac';
 
-const DrinkLogger: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-  const { presets, addDrink, addPreset } = useAppContext();
+interface DrinkLoggerProps {
+  isOpen: boolean;
+  onClose: () => void;
+  editDrink?: Drink; // Pass this to enter edit mode
+}
+
+const DrinkLogger: React.FC<DrinkLoggerProps> = ({ isOpen, onClose, editDrink }) => {
+  const { presets, addDrink, addPreset, updateDrink } = useAppContext();
   const [isCustom, setIsCustom] = useState(false);
   const [customDrink, setCustomDrink] = useState({ name: '', volume: 330, abv: 5 });
   const [saveAsPreset, setSaveAsPreset] = useState(false);
   const [timestamp, setTimestamp] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (editDrink) {
+      setIsCustom(true);
+      setCustomDrink({ name: editDrink.name || '', volume: editDrink.volume, abv: editDrink.abv });
+      setTimestamp(editDrink.timestamp);
+    } else {
+      setIsCustom(false);
+      setCustomDrink({ name: '', volume: 330, abv: 5 });
+      setTimestamp(Date.now());
+    }
+  }, [editDrink, isOpen]);
 
   if (!isOpen) return null;
 
@@ -30,9 +48,13 @@ const DrinkLogger: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
 
   const handleAddCustom = (e: React.FormEvent) => {
     e.preventDefault();
-    addDrink({ ...customDrink, timestamp });
-    if (saveAsPreset) {
-      addPreset(customDrink);
+    if (editDrink) {
+      updateDrink(editDrink.id, { ...customDrink, timestamp });
+    } else {
+      addDrink({ ...customDrink, timestamp });
+      if (saveAsPreset) {
+        addPreset(customDrink);
+      }
     }
     setIsCustom(false);
     setSaveAsPreset(false);
@@ -42,7 +64,7 @@ const DrinkLogger: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
   return (
     <div className="modal-overlay">
       <div className="modal-content card">
-        <h2>Add Drink</h2>
+        <h2>{editDrink ? 'Edit Drink' : 'Add Drink'}</h2>
 
         <div className="time-selector">
           <label>Time of Consumption</label>
@@ -113,13 +135,17 @@ const DrinkLogger: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
               </label>
             </div>
             <div className="form-actions">
-              <button type="button" onClick={() => setIsCustom(false)}>Back</button>
-              <button type="submit" className="primary-btn">Add Drink</button>
+              <button type="button" onClick={() => editDrink ? onClose() : setIsCustom(false)}>
+                {editDrink ? 'Cancel' : 'Back'}
+              </button>
+              <button type="submit" className="primary-btn">
+                {editDrink ? 'Save Changes' : 'Add Drink'}
+              </button>
             </div>
           </form>
         )}
         
-        <button className="close-btn" onClick={onClose}>Close</button>
+        {!editDrink && <button className="close-btn" onClick={onClose}>Close</button>}
       </div>
 
       <style>{`
