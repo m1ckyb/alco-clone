@@ -1,8 +1,16 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { calculateWidmarkR } from '../utils/bac';
 import type { Drink } from '../utils/bac';
 import { supabase } from '../utils/supabase';
+import { 
+  isPushSupported, 
+  requestNotificationPermission, 
+  subscribeUserToPush, 
+  unsubscribeUserFromPush, 
+  triggerLocalTestNotification,
+  syncSubscriptionToSupabase
+} from '../utils/notifications';
 
 const ProfileSettings: React.FC = () => {
   const { 
@@ -10,6 +18,116 @@ const ProfileSettings: React.FC = () => {
     user, lastSynced, isSyncing, signOut, pullFromCloud 
   } = useAppContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Push Notifications State
+  const [pushSupported, setPushSupported] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [subscriptionEndpoint, setSubscriptionEndpoint] = useState<string | null>(null);
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'local' | 'error' | null>(null);
+  const [testNotificationTimer, setTestNotificationTimer] = useState<number | null>(null);
+  const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
+
+  useEffect(() => {
+    const checkSupportAndState = async () => {
+      const supported = isPushSupported();
+      setPushSupported(supported);
+      
+      if (supported) {
+        setNotificationPermission(Notification.permission);
+        
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          const sub = await registration.pushManager.getSubscription();
+          setIsSubscribed(!!sub);
+          if (sub) {
+            setSubscriptionEndpoint(sub.endpoint);
+            // Check if subscription exists in Supabase
+            if (user) {
+              const { data, error } = await supabase
+                .from('push_subscriptions')
+                .select('*')
+                .eq('endpoint', sub.endpoint)
+                .maybeSingle();
+              if (data && !error) {
+                setSyncStatus('synced');
+              } else {
+                setSyncStatus('local');
+              }
+            } else {
+              setSyncStatus('local');
+            }
+          }
+        } catch (err) {
+          console.error('Error checking push subscription state:', err);
+        }
+      }
+    };
+    
+    checkSupportAndState();
+  }, [user]);
+
+  const handleToggleNotifications = async () => {
+    try {
+      if (isSubscribed) {
+        // Unsubscribe
+        const success = await unsubscribeUserFromPush();
+        if (success) {
+          setIsSubscribed(false);
+          setSubscriptionEndpoint(null);
+          setSyncStatus(null);
+        } else {
+          alert('Failed to unsubscribe from push notifications.');
+        }
+      } else {
+        // Subscribe
+        const perm = await requestNotificationPermission();
+        setNotificationPermission(perm);
+        if (perm === 'granted') {
+          const sub = await subscribeUserToPush();
+          if (sub) {
+            setIsSubscribed(true);
+            setSubscriptionEndpoint(sub.endpoint);
+            // Save to database
+            const synced = await syncSubscriptionToSupabase(sub);
+            setSyncStatus(synced ? 'synced' : 'local');
+          } else {
+            alert('Failed to subscribe to push service.');
+          }
+        } else {
+          alert('Notification permission denied.');
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert('Error toggling notifications: ' + err.message);
+    }
+  };
+
+  const handleSendTestNotification = async (delay: number) => {
+    try {
+      if (delay > 0) {
+        setTimerSecondsLeft(delay);
+        setTestNotificationTimer(delay);
+        const interval = setInterval(() => {
+          setTimerSecondsLeft((prev) => {
+            if (prev <= 1) {
+              clearInterval(interval);
+              setTestNotificationTimer(null);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        
+        await triggerLocalTestNotification(delay);
+      } else {
+        await triggerLocalTestNotification(0);
+      }
+    } catch (err: any) {
+      alert('Error triggering test notification: ' + err.message);
+    }
+  };
 
   const [editingPresetName, setEditingPresetName] = useState<string | null>(null);
   const [tempPreset, setTempPreset] = useState<{ name: string; volume: number; abv: number } | null>(null);
@@ -343,6 +461,91 @@ const ProfileSettings: React.FC = () => {
 
         <div className="form-section">
           <div className="section-title">
+            <span>🔔</span> Push Notifications
+          </div>
+          
+          {!pushSupported ? (
+            <div className="notifications-alert error-box">
+              <strong>Push Notifications are not supported in this browser.</strong>
+              <p className="help-text">
+                On iOS, you must first add this app to your Home Screen to enable Push Notifications.
+              </p>
+            </div>
+          ) : (
+            <div className="notifications-container">
+              <div className="notification-status-row">
+                <div className="status-info">
+                  <span className="label">Status</span>
+                  <strong>
+                    {notificationPermission === 'denied' 
+                      ? '🚫 Blocked (Permission Denied)' 
+                      : isSubscribed 
+                      ? '✅ Enabled' 
+                      : '💤 Disabled'}
+                  </strong>
+                  {isSubscribed && syncStatus && (
+                    <span className={`sync-badge ${syncStatus}`}>
+                      {syncStatus === 'synced' ? '☁️ Synced to Cloud' : '💻 Local Only'}
+                    </span>
+                  )}
+                </div>
+                
+                <button 
+                  type="button"
+                  className={`btn ${isSubscribed ? 'btn-outline' : 'btn-primary'}`}
+                  onClick={handleToggleNotifications}
+                  disabled={notificationPermission === 'denied'}
+                  style={isSubscribed ? { borderColor: 'var(--error)', color: 'var(--error)', flex: 'none' } : { flex: 'none' }}
+                >
+                  {isSubscribed ? 'Disable' : 'Enable'}
+                </button>
+              </div>
+
+              {notificationPermission === 'denied' && (
+                <p className="help-text error-text" style={{ marginTop: '8px' }}>
+                  Please reset notification permissions in your browser settings to enable notifications.
+                </p>
+              )}
+
+              {isSubscribed && (
+                <div className="notification-details">
+                  <div className="details-group">
+                    <span className="label">Device Subscription Endpoint</span>
+                    <code className="endpoint-box">{subscriptionEndpoint || 'Loading...'}</code>
+                  </div>
+                  
+                  <div className="test-notification-section">
+                    <span className="label">Test Notification</span>
+                    <p className="help-text">Verify notifications work. Click the delayed option and minimize the app or lock your screen.</p>
+                    <div className="test-buttons">
+                      <button 
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => handleSendTestNotification(0)}
+                        disabled={testNotificationTimer !== null}
+                      >
+                        Send Now
+                      </button>
+                      <button 
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => handleSendTestNotification(5)}
+                        disabled={testNotificationTimer !== null}
+                      >
+                        {testNotificationTimer !== null 
+                          ? `Sending in ${timerSecondsLeft}s...` 
+                          : 'Send in 5 Seconds'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="form-section">
+          <div className="section-title">
             <span>💾</span> Data Management
           </div>
           <div className="data-buttons">
@@ -584,6 +787,91 @@ const ProfileSettings: React.FC = () => {
           outline: none;
           border-color: var(--primary);
           background: rgba(0, 59, 111, 0.05);
+        }
+        .notifications-container {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .notification-status-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: rgba(255, 255, 255, 0.02);
+          padding: 12px;
+          border-radius: var(--border-radius);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .status-info {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .sync-badge {
+          font-size: 0.7rem;
+          padding: 2px 6px;
+          border-radius: 4px;
+          display: inline-block;
+          margin-top: 2px;
+          width: fit-content;
+        }
+        .sync-badge.synced {
+          background: rgba(76, 175, 80, 0.15);
+          color: #81c784;
+          border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        .sync-badge.local {
+          background: rgba(255, 152, 0, 0.15);
+          color: #ffb74d;
+          border: 1px solid rgba(255, 152, 0, 0.3);
+        }
+        .notification-details {
+          background: rgba(255, 255, 255, 0.01);
+          padding: 12px;
+          border-radius: var(--border-radius);
+          border: 1px solid rgba(255, 255, 255, 0.03);
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .details-group {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .endpoint-box {
+          font-family: monospace;
+          font-size: 0.75rem;
+          background: rgba(0, 0, 0, 0.2);
+          padding: 6px;
+          border-radius: 4px;
+          overflow-x: auto;
+          white-space: nowrap;
+          color: #aaa;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .test-notification-section {
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          padding-top: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .test-buttons {
+          display: flex;
+          gap: 10px;
+        }
+        .test-buttons .btn {
+          flex: 1;
+          padding: 8px;
+          font-size: 0.85rem;
+        }
+        .error-box {
+          background: rgba(244, 67, 54, 0.1);
+          border: 1px solid rgba(244, 67, 54, 0.3);
+          padding: 12px;
+          border-radius: var(--border-radius);
+          color: #e57373;
         }
       `}</style>
     </div>
