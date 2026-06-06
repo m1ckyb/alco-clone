@@ -11,26 +11,26 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 // Handle push events
 self.addEventListener('push', (event) => {
-  let data = { title: 'AlcoClone', body: 'Time to check your BAC!' };
+  let data = { title: 'SipWise', body: 'Time to check your BAC!' };
   
   if (event.data) {
     try {
       data = event.data.json();
     } catch (err) {
-      data = { title: 'AlcoClone', body: event.data.text() };
+      data = { title: 'SipWise', body: event.data.text() };
     }
   }
 
   const options: any = {
     body: data.body,
-    icon: '/alco-clone/favicon.svg',
-    badge: '/alco-clone/favicon.svg',
+    icon: '/sipwise/favicon.svg',
+    badge: '/sipwise/favicon.svg',
     vibrate: [100, 50, 100],
     data: data,
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'AlcoClone', options)
+    self.registration.showNotification(data.title || 'SipWise', options)
   );
 });
 

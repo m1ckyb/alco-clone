@@ -25,7 +25,7 @@ function App() {
   return (
     <>
       <header className="app-header">
-        <h1>AlcoClone Web</h1>
+        <h1>SipWise</h1>
       </header>
 
       <main>

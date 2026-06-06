@@ -1,6 +1,6 @@
-# AlcoClone
+# SipWise
 
-AlcoClone is a Blood Alcohol Content (BAC) calculator and consumption tracker web application. It helps users monitor their estimated alcohol levels in real-time based on their profile and drink history.
+SipWise is a Blood Alcohol Content (BAC) calculator and consumption tracker web application. It helps users monitor their estimated alcohol levels in real-time based on their profile and drink history.
 
 ## Features
 
@@ -33,8 +33,8 @@ AlcoClone is a Blood Alcohol Content (BAC) calculator and consumption tracker we
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/m1ckyb/alco-clone.git
-   cd alco-clone
+   git clone https://github.com/m1ckyb/sipwise.git
+   cd sipwise
    ```
 
 2. **Install dependencies:**
@@ -66,7 +66,7 @@ This project is configured for automated deployment via GitHub Actions.
 Ensure the `base` property in `vite.config.ts` matches your repository name:
 ```typescript
 export default defineConfig({
-  base: '/alco-clone/', // Replace with your repository name
+  base: '/sipwise/', // Replace with your repository name
   // ... rest of the config
 })
 ```

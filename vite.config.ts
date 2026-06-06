@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/alco-clone/', // Change this to your repository name
+  base: '/sipwise/', // Change this to your repository name
   plugins: [
     react(),
     VitePWA({
@@ -14,8 +14,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'AlcoClone Web',
-        short_name: 'AlcoClone',
+        name: 'SipWise Web',
+        short_name: 'SipWise',
         description: 'Alcohol Consumption Tracker & BAC Calculator',
         theme_color: '#003B6F',
         background_color: '#121212',

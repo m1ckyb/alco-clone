@@ -138,13 +138,13 @@ export async function triggerLocalTestNotification(delaySeconds: number = 0): Pr
 
   const trigger = async () => {
     const registration = await navigator.serviceWorker.ready;
-    await registration.showNotification('AlcoClone Test', {
+    await registration.showNotification('SipWise Test', {
       body: 'This is a test notification from your service worker!',
-      icon: '/alco-clone/favicon.svg',
-      badge: '/alco-clone/favicon.svg',
+      icon: '/sipwise/favicon.svg',
+      badge: '/sipwise/favicon.svg',
       vibrate: [100, 50, 100],
       data: {
-        url: window.location.origin + '/alco-clone/'
+        url: window.location.origin + '/sipwise/'
       }
     } as any);
   };
