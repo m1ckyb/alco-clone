@@ -140,11 +140,11 @@ export async function triggerLocalTestNotification(delaySeconds: number = 0): Pr
     const registration = await navigator.serviceWorker.ready;
     await registration.showNotification('SipWise Test', {
       body: 'This is a test notification from your service worker!',
-      icon: '/sipwise/favicon.svg',
-      badge: '/sipwise/favicon.svg',
+      icon: '/favicon.svg',
+      badge: '/favicon.svg',
       vibrate: [100, 50, 100],
       data: {
-        url: window.location.origin + '/sipwise/'
+        url: window.location.origin + '/'
       }
     } as any);
   };

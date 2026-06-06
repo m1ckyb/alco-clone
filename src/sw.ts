@@ -23,8 +23,8 @@ self.addEventListener('push', (event) => {
 
   const options: any = {
     body: data.body,
-    icon: '/sipwise/favicon.svg',
-    badge: '/sipwise/favicon.svg',
+    icon: '/favicon.svg',
+    badge: '/favicon.svg',
     vibrate: [100, 50, 100],
     data: data,
   };

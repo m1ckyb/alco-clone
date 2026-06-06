@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/sipwise/', // Change this to your repository name
+  base: '/', // Change this to your repository name
   plugins: [
     react(),
     VitePWA({
