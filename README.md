@@ -33,7 +33,7 @@ AlcoClone is a Blood Alcohol Content (BAC) calculator and consumption tracker we
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/michael/alco-clone.git
+   git clone https://github.com/m1ckyb/alco-clone.git
    cd alco-clone
    ```
 
