@@ -28,6 +28,23 @@ const ProfileSettings: React.FC = () => {
   const [testNotificationTimer, setTestNotificationTimer] = useState<number | null>(null);
   const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
 
+  // Collapsible sections state
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    bodyMetrics: true,
+    metabolism: false,
+    presets: false,
+    sync: false,
+    notifications: false,
+    data: false,
+  });
+
+  const toggleSection = (section: string) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
   useEffect(() => {
     const checkSupportAndState = async () => {
       const supported = isPushSupported();
@@ -189,7 +206,7 @@ const ProfileSettings: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `alcoclone-backup-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `sipwise-backup-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -232,338 +249,425 @@ const ProfileSettings: React.FC = () => {
       </div>
       
       <div className="card settings-card">
-        <div className="form-section">
-          <div className="section-title">
-            <span>👤</span> Body Metrics
-          </div>
-          
-          <div className="form-group">
-            <label>Gender</label>
-            <div className="select-wrapper">
-              <select name="gender" value={profile.gender} onChange={handleChange}>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
+        {/* Section 1: Body Metrics */}
+        <div className={`form-section ${openSections.bodyMetrics ? 'open' : 'collapsed'}`}>
+          <button 
+            type="button" 
+            className="section-title-btn" 
+            onClick={() => toggleSection('bodyMetrics')}
+            aria-expanded={openSections.bodyMetrics}
+          >
+            <div className="section-title">
+              <span>👤</span> Body Metrics
             </div>
-            <p className="help-text">Biological sex affects the body water ratio (r) used in calculations.</p>
-          </div>
+            <span className="chevron">▶</span>
+          </button>
+          <div className="section-content-wrapper">
+            <div className="section-content">
+              <div className="section-content-inner">
+                <div className="form-group">
+                  <label>Gender</label>
+                  <div className="select-wrapper">
+                    <select name="gender" value={profile.gender} onChange={handleChange}>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                  </div>
+                  <p className="help-text">Biological sex affects the body water ratio (r) used in calculations.</p>
+                </div>
 
-          <div className="form-group">
-            <label>Weight (kg)</label>
-            <input 
-              type="number" 
-              name="weight" 
-              min="30"
-              max="300"
-              value={profile.weight} 
-              onChange={handleChange} 
-            />
-            <p className="help-text">Alcohol concentration is inversely proportional to body weight.</p>
-          </div>
+                <div className="form-group">
+                  <label>Weight (kg)</label>
+                  <input 
+                    type="number" 
+                    name="weight" 
+                    min="30"
+                    max="300"
+                    value={profile.weight} 
+                    onChange={handleChange} 
+                  />
+                  <p className="help-text">Alcohol concentration is inversely proportional to body weight.</p>
+                </div>
 
-          <div className="form-group">
-            <label>Height (cm)</label>
-            <input 
-              type="number" 
-              name="height" 
-              min="50"
-              max="250"
-              value={profile.height} 
-              onChange={handleChange} 
-            />
-          </div>
+                <div className="form-group">
+                  <label>Height (cm)</label>
+                  <input 
+                    type="number" 
+                    name="height" 
+                    min="50"
+                    max="250"
+                    value={profile.height} 
+                    onChange={handleChange} 
+                  />
+                </div>
 
-          <div className="form-group">
-            <label>Age (years)</label>
-            <input 
-              type="number" 
-              name="age" 
-              min="1"
-              max="120"
-              value={profile.age} 
-              onChange={handleChange} 
-            />
-            <p className="help-text">Height and Age are used by the Watson formula to calculate your body water ratio (r) more accurately.</p>
-          </div>
+                <div className="form-group">
+                  <label>Age (years)</label>
+                  <input 
+                    type="number" 
+                    name="age" 
+                    min="1"
+                    max="120"
+                    value={profile.age} 
+                    onChange={handleChange} 
+                  />
+                  <p className="help-text">Height and Age are used by the Watson formula to calculate your body water ratio (r) more accurately.</p>
+                </div>
 
-          <div className="info-box">
-            <span className="label">Current Body Water Ratio (r)</span>
-            <strong className="r-value">{calculateWidmarkR(profile).toFixed(3)}</strong>
-          </div>
+                <div className="info-box">
+                  <span className="label">Current Body Water Ratio (r)</span>
+                  <strong className="r-value">{calculateWidmarkR(profile).toFixed(3)}</strong>
+                </div>
 
-          <div className="form-group">
-            <label>Display Unit</label>
-            <div className="select-wrapper">
-              <select name="displayUnit" value={profile.displayUnit} onChange={handleChange}>
-                <option value="%">% (Percentage, e.g. 0.050%)</option>
-                <option value="‰">‰ (Per Mille, e.g. 0.50‰)</option>
-              </select>
+                <div className="form-group">
+                  <label>Display Unit</label>
+                  <div className="select-wrapper">
+                    <select name="displayUnit" value={profile.displayUnit} onChange={handleChange}>
+                      <option value="%">% (Percentage, e.g. 0.050%)</option>
+                      <option value="‰">‰ (Per Mille, e.g. 0.50‰)</option>
+                    </select>
+                  </div>
+                  <p className="help-text">Choose how BAC values are displayed throughout the app.</p>
+                </div>
+              </div>
             </div>
-            <p className="help-text">Choose how BAC values are displayed throughout the app.</p>
           </div>
         </div>
 
-        <div className="form-section">
-          <div className="section-title">
-            <span>⚡</span> Metabolism
-          </div>
-          <div className="form-group">
-            <label>Metabolism Rate ({profile.displayUnit}/hr)</label>
-            <input 
-              type="number" 
-              name="metabolismRate" 
-              step="0.001"
-              min={profile.displayUnit === '‰' ? 0.05 : 0.005}
-              max={profile.displayUnit === '‰' ? 0.40 : 0.040}
-              value={profile.displayUnit === '‰' ? profile.metabolismRate * 10 : profile.metabolismRate} 
-              onChange={(e) => {
-                const val = Number(e.target.value);
-                setProfile({
-                  ...profile,
-                  metabolismRate: profile.displayUnit === '‰' ? val / 10 : val
-                });
-              }} 
-            />
-            <p className="help-text">
-              Standard average is {profile.displayUnit === '‰' ? '0.15' : '0.015'}. 
-              Adjust if you know you metabolize faster or slower.
-            </p>
+        {/* Section 2: Metabolism */}
+        <div className={`form-section ${openSections.metabolism ? 'open' : 'collapsed'}`}>
+          <button 
+            type="button" 
+            className="section-title-btn" 
+            onClick={() => toggleSection('metabolism')}
+            aria-expanded={openSections.metabolism}
+          >
+            <div className="section-title">
+              <span>⚡</span> Metabolism
+            </div>
+            <span className="chevron">▶</span>
+          </button>
+          <div className="section-content-wrapper">
+            <div className="section-content">
+              <div className="section-content-inner">
+                <div className="form-group">
+                  <label>Metabolism Rate ({profile.displayUnit}/hr)</label>
+                  <input 
+                    type="number" 
+                    name="metabolismRate" 
+                    step="0.001"
+                    min={profile.displayUnit === '‰' ? 0.05 : 0.005}
+                    max={profile.displayUnit === '‰' ? 0.40 : 0.040}
+                    value={profile.displayUnit === '‰' ? profile.metabolismRate * 10 : profile.metabolismRate} 
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setProfile({
+                        ...profile,
+                        metabolismRate: profile.displayUnit === '‰' ? val / 10 : val
+                      });
+                    }} 
+                  />
+                  <p className="help-text">
+                    Standard average is {profile.displayUnit === '‰' ? '0.15' : '0.015'}. 
+                    Adjust if you know you metabolize faster or slower.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="form-section">
-          <div className="section-title">
-            <span>🍹</span> Drink Presets
-          </div>
-          <div className="presets-list">
-            {presets.length === 0 ? (
-              <p className="help-text">No presets saved yet.</p>
-            ) : (
-              presets.map((preset, index) => (
-                <div key={index} className="preset-item">
-                  {editingPresetName === preset.name ? (
-                    <div className="preset-edit-form">
-                      <input 
-                        type="text" 
-                        value={tempPreset?.name} 
-                        onChange={e => setTempPreset({...tempPreset!, name: e.target.value})} 
-                        placeholder="Name"
-                      />
-                      <div className="side-by-side">
-                        <input 
-                          type="number" 
-                          value={tempPreset?.volume} 
-                          onChange={e => setTempPreset({...tempPreset!, volume: Number(e.target.value)})} 
-                          placeholder="ml"
-                        />
-                        <input 
-                          type="number" 
-                          step="0.1"
-                          value={tempPreset?.abv} 
-                          onChange={e => setTempPreset({...tempPreset!, abv: Number(e.target.value)})} 
-                          placeholder="%"
-                        />
-                      </div>
-                      <div className="edit-actions">
-                        <button className="btn btn-primary" onClick={savePresetEdit}>Save</button>
-                        <button className="btn text-btn" onClick={() => setEditingPresetName(null)}>Cancel</button>
-                      </div>
-                    </div>
+        {/* Section 3: Drink Presets */}
+        <div className={`form-section ${openSections.presets ? 'open' : 'collapsed'}`}>
+          <button 
+            type="button" 
+            className="section-title-btn" 
+            onClick={() => toggleSection('presets')}
+            aria-expanded={openSections.presets}
+          >
+            <div className="section-title">
+              <span>🍹</span> Drink Presets
+            </div>
+            <span className="chevron">▶</span>
+          </button>
+          <div className="section-content-wrapper">
+            <div className="section-content">
+              <div className="section-content-inner">
+                <div className="presets-list">
+                  {presets.length === 0 ? (
+                    <p className="help-text">No presets saved yet.</p>
                   ) : (
-                    <>
-                      <div className="preset-info">
-                        <strong>{preset.name}</strong>
-                        <span>{preset.volume}ml • {preset.abv}%</span>
+                    presets.map((preset, index) => (
+                      <div key={index} className="preset-item">
+                        {editingPresetName === preset.name ? (
+                          <div className="preset-edit-form">
+                            <input 
+                              type="text" 
+                              value={tempPreset?.name} 
+                              onChange={e => setTempPreset({...tempPreset!, name: e.target.value})} 
+                              placeholder="Name"
+                            />
+                            <div className="side-by-side">
+                              <input 
+                                type="number" 
+                                value={tempPreset?.volume} 
+                                onChange={e => setTempPreset({...tempPreset!, volume: Number(e.target.value)})} 
+                                placeholder="ml"
+                              />
+                              <input 
+                                type="number" 
+                                step="0.1"
+                                value={tempPreset?.abv} 
+                                onChange={e => setTempPreset({...tempPreset!, abv: Number(e.target.value)})} 
+                                placeholder="%"
+                              />
+                            </div>
+                            <div className="edit-actions">
+                              <button className="btn btn-primary" onClick={savePresetEdit}>Save</button>
+                              <button className="btn text-btn" onClick={() => setEditingPresetName(null)}>Cancel</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="preset-info">
+                              <strong>{preset.name}</strong>
+                              <span>{preset.volume}ml • {preset.abv}%</span>
+                            </div>
+                            <div className="preset-actions">
+                              <button 
+                                className="edit-preset-btn" 
+                                onClick={() => startEditPreset(preset)}
+                                title="Edit Preset"
+                              >
+                                ✎
+                              </button>
+                              <button 
+                                className="remove-preset-btn" 
+                                onClick={() => preset.name && removePreset(preset.name)}
+                                title="Remove Preset"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
-                      <div className="preset-actions">
-                        <button 
-                          className="edit-preset-btn" 
-                          onClick={() => startEditPreset(preset)}
-                          title="Edit Preset"
-                        >
-                          ✎
-                        </button>
-                        <button 
-                          className="remove-preset-btn" 
-                          onClick={() => preset.name && removePreset(preset.name)}
-                          title="Remove Preset"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </>
+                    ))
                   )}
                 </div>
-              ))
-            )}
+                <p className="help-text">Manage your saved drink templates. You can always add more from the "Add Drink" menu.</p>
+              </div>
+            </div>
           </div>
-          <p className="help-text">Manage your saved drink templates. You can always add more from the "Add Drink" menu.</p>
         </div>
 
-        <div className="form-section">
-          <div className="section-title">
-            <span>☁️</span> Cloud Sync
-          </div>
-          
-          {!user ? (
-            <div className="auth-container">
-              <p className="help-text" style={{ marginBottom: '12px' }}>
-                Sync your data across devices using a free account.
-              </p>
-              <form onSubmit={handleAuth} className="auth-form">
-                <input 
-                  type="email" 
-                  placeholder="Email" 
-                  value={email} 
-                  onChange={e => setEmail(e.target.value)} 
-                  required 
-                />
-                <input 
-                  type="password" 
-                  placeholder="Password" 
-                  value={password} 
-                  onChange={e => setPassword(e.target.value)} 
-                  required 
-                />
-                {authError && <p className="error-text">{authError}</p>}
-                <button type="submit" className="btn btn-primary">
-                  {authMode === 'login' ? 'Login' : 'Sign Up'}
-                </button>
-              </form>
-              <button 
-                className="text-btn" 
-                onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
-              >
-                {authMode === 'login' ? 'Need an account? Sign Up' : 'Have an account? Login'}
-              </button>
+        {/* Section 4: Cloud Sync */}
+        <div className={`form-section ${openSections.sync ? 'open' : 'collapsed'}`}>
+          <button 
+            type="button" 
+            className="section-title-btn" 
+            onClick={() => toggleSection('sync')}
+            aria-expanded={openSections.sync}
+          >
+            <div className="section-title">
+              <span>☁️</span> Cloud Sync
             </div>
-          ) : (
-            <div className="sync-status">
-              <div className="status-row">
-                <span>Account:</span>
-                <strong>{user.email}</strong>
-              </div>
-              <div className="status-row">
-                <span>Last Synced:</span>
-                <span>{isSyncing ? 'Syncing...' : (lastSynced || 'Never')}</span>
-              </div>
-              <div className="sync-actions">
-                <button className="btn btn-secondary" onClick={pullFromCloud} disabled={isSyncing}>
-                  Sync Now
-                </button>
-                <button className="btn btn-outline" onClick={signOut}>
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="form-section">
-          <div className="section-title">
-            <span>🔔</span> Push Notifications
-          </div>
-          
-          {!pushSupported ? (
-            <div className="notifications-alert error-box">
-              <strong>Push Notifications are not supported in this browser.</strong>
-              <p className="help-text">
-                On iOS, you must first add this app to your Home Screen to enable Push Notifications.
-              </p>
-            </div>
-          ) : (
-            <div className="notifications-container">
-              <div className="notification-status-row">
-                <div className="status-info">
-                  <span className="label">Status</span>
-                  <strong>
-                    {notificationPermission === 'denied' 
-                      ? '🚫 Blocked (Permission Denied)' 
-                      : isSubscribed 
-                      ? '✅ Enabled' 
-                      : '💤 Disabled'}
-                  </strong>
-                  {isSubscribed && syncStatus && (
-                    <span className={`sync-badge ${syncStatus}`}>
-                      {syncStatus === 'synced' ? '☁️ Synced to Cloud' : '💻 Local Only'}
-                    </span>
-                  )}
-                </div>
-                
-                <button 
-                  type="button"
-                  className={`btn ${isSubscribed ? 'btn-outline' : 'btn-primary'}`}
-                  onClick={handleToggleNotifications}
-                  disabled={notificationPermission === 'denied'}
-                  style={isSubscribed ? { borderColor: 'var(--error)', color: 'var(--error)', flex: 'none' } : { flex: 'none' }}
-                >
-                  {isSubscribed ? 'Disable' : 'Enable'}
-                </button>
-              </div>
-
-              {notificationPermission === 'denied' && (
-                <p className="help-text error-text" style={{ marginTop: '8px' }}>
-                  Please reset notification permissions in your browser settings to enable notifications.
-                </p>
-              )}
-
-              {isSubscribed && (
-                <div className="notification-details">
-                  <div className="details-group">
-                    <span className="label">Device Subscription Endpoint</span>
-                    <code className="endpoint-box">{subscriptionEndpoint || 'Loading...'}</code>
-                  </div>
-                  
-                  <div className="test-notification-section">
-                    <span className="label">Test Notification</span>
-                    <p className="help-text">Verify notifications work. Click the delayed option and minimize the app or lock your screen.</p>
-                    <div className="test-buttons">
-                      <button 
-                        type="button"
-                        className="btn btn-secondary"
-                        onClick={() => handleSendTestNotification(0)}
-                        disabled={testNotificationTimer !== null}
-                      >
-                        Send Now
+            <span className="chevron">▶</span>
+          </button>
+          <div className="section-content-wrapper">
+            <div className="section-content">
+              <div className="section-content-inner">
+                {!user ? (
+                  <div className="auth-container">
+                    <p className="help-text" style={{ marginBottom: '12px' }}>
+                      Sync your data across devices using a free account.
+                    </p>
+                    <form onSubmit={handleAuth} className="auth-form">
+                      <input 
+                        type="email" 
+                        placeholder="Email" 
+                        value={email} 
+                        onChange={e => setEmail(e.target.value)} 
+                        required 
+                      />
+                      <input 
+                        type="password" 
+                        placeholder="Password" 
+                        value={password} 
+                        onChange={e => setPassword(e.target.value)} 
+                        required 
+                      />
+                      {authError && <p className="error-text">{authError}</p>}
+                      <button type="submit" className="btn btn-primary">
+                        {authMode === 'login' ? 'Login' : 'Sign Up'}
                       </button>
-                      <button 
-                        type="button"
-                        className="btn btn-secondary"
-                        onClick={() => handleSendTestNotification(5)}
-                        disabled={testNotificationTimer !== null}
-                      >
-                        {testNotificationTimer !== null 
-                          ? `Sending in ${timerSecondsLeft}s...` 
-                          : 'Send in 5 Seconds'}
+                    </form>
+                    <button 
+                      className="text-btn" 
+                      onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
+                    >
+                      {authMode === 'login' ? 'Need an account? Sign Up' : 'Have an account? Login'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="sync-status">
+                    <div className="status-row">
+                      <span>Account:</span>
+                      <strong>{user.email}</strong>
+                    </div>
+                    <div className="status-row">
+                      <span>Last Synced:</span>
+                      <span>{isSyncing ? 'Syncing...' : (lastSynced || 'Never')}</span>
+                    </div>
+                    <div className="sync-actions">
+                      <button className="btn btn-secondary" onClick={pullFromCloud} disabled={isSyncing}>
+                        Sync Now
+                      </button>
+                      <button className="btn btn-outline" onClick={signOut}>
+                        Sign Out
                       </button>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
-        <div className="form-section">
-          <div className="section-title">
-            <span>💾</span> Data Management
+        {/* Section 5: Push Notifications */}
+        <div className={`form-section ${openSections.notifications ? 'open' : 'collapsed'}`}>
+          <button 
+            type="button" 
+            className="section-title-btn" 
+            onClick={() => toggleSection('notifications')}
+            aria-expanded={openSections.notifications}
+          >
+            <div className="section-title">
+              <span>🔔</span> Push Notifications
+            </div>
+            <span className="chevron">▶</span>
+          </button>
+          <div className="section-content-wrapper">
+            <div className="section-content">
+              <div className="section-content-inner">
+                {!pushSupported ? (
+                  <div className="notifications-alert error-box">
+                    <strong>Push Notifications are not supported in this browser.</strong>
+                    <p className="help-text">
+                      On iOS, you must first add this app to your Home Screen to enable Push Notifications.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="notifications-container">
+                    <div className="notification-status-row">
+                      <div className="status-info">
+                        <span className="label">Status</span>
+                        <strong>
+                          {notificationPermission === 'denied' 
+                            ? '🚫 Blocked (Permission Denied)' 
+                            : isSubscribed 
+                            ? '✅ Enabled' 
+                            : '💤 Disabled'}
+                        </strong>
+                        {isSubscribed && syncStatus && (
+                          <span className={`sync-badge ${syncStatus}`}>
+                            {syncStatus === 'synced' ? '☁️ Synced to Cloud' : '💻 Local Only'}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <button 
+                        type="button"
+                        className={`btn ${isSubscribed ? 'btn-outline' : 'btn-primary'}`}
+                        onClick={handleToggleNotifications}
+                        disabled={notificationPermission === 'denied'}
+                        style={isSubscribed ? { borderColor: 'var(--error)', color: 'var(--error)', flex: 'none' } : { flex: 'none' }}
+                      >
+                        {isSubscribed ? 'Disable' : 'Enable'}
+                      </button>
+                    </div>
+
+                    {notificationPermission === 'denied' && (
+                      <p className="help-text error-text" style={{ marginTop: '8px' }}>
+                        Please reset notification permissions in your browser settings to enable notifications.
+                      </p>
+                    )}
+
+                    {isSubscribed && (
+                      <div className="notification-details">
+                        <div className="details-group">
+                          <span className="label">Device Subscription Endpoint</span>
+                          <code className="endpoint-box">{subscriptionEndpoint || 'Loading...'}</code>
+                        </div>
+                        
+                        <div className="test-notification-section">
+                          <span className="label">Test Notification</span>
+                          <p className="help-text">Verify notifications work. Click the delayed option and minimize the app or lock your screen.</p>
+                          <div className="test-buttons">
+                            <button 
+                              type="button"
+                              className="btn btn-secondary"
+                              onClick={() => handleSendTestNotification(0)}
+                              disabled={testNotificationTimer !== null}
+                            >
+                              Send Now
+                            </button>
+                            <button 
+                              type="button"
+                              className="btn btn-secondary"
+                              onClick={() => handleSendTestNotification(5)}
+                              disabled={testNotificationTimer !== null}
+                            >
+                              {testNotificationTimer !== null 
+                                ? `Sending in ${timerSecondsLeft}s...` 
+                                : 'Send in 5 Seconds'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="data-buttons">
-            <button className="btn btn-secondary" onClick={handleExport}>
-              Export Data
-            </button>
-            <button className="btn btn-secondary" onClick={handleImportClick}>
-              Import Data
-            </button>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              style={{ display: 'none' }} 
-              accept=".json"
-              onChange={handleFileChange}
-            />
+        </div>
+
+        {/* Section 6: Data Management */}
+        <div className={`form-section ${openSections.data ? 'open' : 'collapsed'}`}>
+          <button 
+            type="button" 
+            className="section-title-btn" 
+            onClick={() => toggleSection('data')}
+            aria-expanded={openSections.data}
+          >
+            <div className="section-title">
+              <span>💾</span> Data Management
+            </div>
+            <span className="chevron">▶</span>
+          </button>
+          <div className="section-content-wrapper">
+            <div className="section-content">
+              <div className="section-content-inner">
+                <div className="data-buttons">
+                  <button className="btn btn-secondary" onClick={handleExport}>
+                    Export Data
+                  </button>
+                  <button className="btn btn-secondary" onClick={handleImportClick}>
+                    Import Data
+                  </button>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    style={{ display: 'none' }} 
+                    accept=".json"
+                    onChange={handleFileChange}
+                  />
+                </div>
+                <p className="help-text">Backup your data to a JSON file or restore from a previous backup.</p>
+              </div>
+            </div>
           </div>
-          <p className="help-text">Backup your data to a JSON file or restore from a previous backup.</p>
         </div>
       </div>
 
@@ -584,22 +688,68 @@ const ProfileSettings: React.FC = () => {
           overflow: hidden;
         }
         .form-section {
-          padding: var(--spacing-md);
           border-bottom: 1px solid rgba(255,255,255,0.05);
+          display: flex;
+          flex-direction: column;
         }
         .form-section:last-child {
           border-bottom: none;
+        }
+        .section-title-btn {
+          width: 100%;
+          background: transparent;
+          border: none;
+          color: inherit;
+          text-align: left;
+          padding: var(--spacing-md);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          cursor: pointer;
+          font-family: inherit;
+          transition: background-color 0.2s ease;
+        }
+        .section-title-btn:hover {
+          background: rgba(255, 255, 255, 0.02);
+        }
+        .section-title-btn:focus-visible {
+          outline: 2px solid var(--primary);
+          outline-offset: -2px;
         }
         .section-title {
           font-size: 0.8rem;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 1px;
-          margin-bottom: var(--spacing-md);
           color: var(--primary);
           display: flex;
           align-items: center;
           gap: 8px;
+          margin: 0;
+        }
+        .section-title-btn .chevron {
+          font-size: 0.8rem;
+          color: var(--primary);
+          opacity: 0.7;
+          display: inline-block;
+          transition: transform 0.2s ease;
+        }
+        .form-section.open .section-title-btn .chevron {
+          transform: rotate(90deg);
+        }
+        .section-content-wrapper {
+          display: grid;
+          grid-template-rows: 0fr;
+          transition: grid-template-rows 0.25s ease-in-out;
+        }
+        .form-section.open .section-content-wrapper {
+          grid-template-rows: 1fr;
+        }
+        .section-content {
+          overflow: hidden;
+        }
+        .section-content-inner {
+          padding: 0 var(--spacing-md) var(--spacing-md) var(--spacing-md);
         }
         .form-group {
           margin-bottom: var(--spacing-md);
