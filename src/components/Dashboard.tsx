@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { calculateBAC, calculateTimeToZero, formatBAC } from '../utils/bac';
+import { calculateBAC, calculateTimeToZero, formatBAC, groupIntoSessions } from '../utils/bac';
 import BACGraph from './BACGraph';
 
 const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
@@ -42,12 +42,18 @@ const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
     return `${h}h ${m}m`;
   };
 
-  const totalAlcohol = drinks.reduce((sum, d) => sum + (d.volume * (d.abv / 100) * 0.789), 0);
-  const firstDrinkTime = drinks.length > 0 ? Math.min(...drinks.map(d => d.timestamp)) : now;
+  const isActive = currentBAC > 0;
+  const sessions = groupIntoSessions(drinks, profile);
+  const currentSession = sessions.length > 0 ? sessions[0] : null;
+
+  const activeDrinks = isActive && currentSession ? currentSession.drinks : [];
+  const totalAlcohol = isActive && currentSession ? currentSession.totalAlcoholGrams : 0;
+  const firstDrinkTime = isActive && currentSession ? currentSession.startTime : now;
+
   // Safety rule: 1 standard drink (10g) per hour from the first drink
   const safetySoberTime = firstDrinkTime + (totalAlcohol / 10) * 3600000;
   const standardSoberTime = now + timeToZero * 3600000;
-  const isSafetyBufferRelevant = totalAlcohol > 0 && safetySoberTime > (standardSoberTime + 1800000); // 30 min diff threshold
+  const isSafetyBufferRelevant = isActive && totalAlcohol > 0 && safetySoberTime > (standardSoberTime + 1800000); // 30 min diff threshold
 
   return (
     <div className="dashboard">
@@ -67,40 +73,44 @@ const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
         </div>
       </div>
 
-      <div className="info-grid">
-        <div className="card info-card">
-          <span className="label">Time to Sober</span>
-          <h3>{formatHours(timeToZero)}</h3>
-        </div>
-        <div className="card info-card">
-          <span className="label">Active Drinks</span>
-          <h3>
-            {drinks.filter(d => (now - d.timestamp) < 24 * 3600000).length} 
-            <small style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: 'normal', display: 'block', marginTop: '4px' }}>
-              ({(totalAlcohol / 10).toFixed(1)} standard)
-            </small>
-          </h3>
-        </div>
-      </div>
+      {isActive && (
+        <>
+          <div className="info-grid">
+            <div className="card info-card">
+              <span className="label">Time to Sober</span>
+              <h3>{formatHours(timeToZero)}</h3>
+            </div>
+            <div className="card info-card">
+              <span className="label">Active Drinks</span>
+              <h3>
+                {activeDrinks.length} 
+                <small style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: 'normal', display: 'block', marginTop: '4px' }}>
+                  ({(totalAlcohol / 10).toFixed(1)} standard)
+                </small>
+              </h3>
+            </div>
+          </div>
 
-      <div className="card info-card" style={{ marginTop: 'var(--spacing-md)' }}>
-        <span className="label">Total Alcohol Consumed</span>
-        <h3>{totalAlcohol.toFixed(1)}g</h3>
-        <p className="help-text" style={{ fontSize: '0.9rem', marginTop: '4px', opacity: 0.8 }}>
-          You should be sober by <strong>{new Date(standardSoberTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
-        </p>
-      </div>
+          <div className="card info-card" style={{ marginTop: 'var(--spacing-md)' }}>
+            <span className="label">Total Alcohol Consumed</span>
+            <h3>{totalAlcohol.toFixed(1)}g</h3>
+            <p className="help-text" style={{ fontSize: '0.9rem', marginTop: '4px', opacity: 0.8 }}>
+              You should be sober by <strong>{new Date(standardSoberTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
+            </p>
+          </div>
 
-      {isSafetyBufferRelevant && (
-        <div className="card safety-card" style={{ marginTop: 'var(--spacing-sm)', background: 'rgba(255, 152, 0, 0.15)', borderColor: 'rgba(255, 152, 0, 0.4)', borderLeft: '4px solid #ff9800', textAlign: 'left' }}>
-          <span className="label" style={{ color: '#ff9800', fontWeight: 'bold' }}>⚠️ Safety Buffer (1 Drink/Hr Rule)</span>
-          <p style={{ fontSize: '0.9rem', margin: '6px 0 0 0', color: '#ff9800' }}>
-            Govt. guidelines suggest you might not be safe until <strong>{new Date(safetySoberTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
-          </p>
-          <p className="help-text" style={{ fontSize: '0.75rem', marginTop: '6px', opacity: 0.8, color: '#eee' }}>
-            The "1 standard drink per hour" rule is a safer, more conservative estimate for larger body weights.
-          </p>
-        </div>
+          {isSafetyBufferRelevant && (
+            <div className="card safety-card" style={{ marginTop: 'var(--spacing-sm)', background: 'rgba(255, 152, 0, 0.15)', borderColor: 'rgba(255, 152, 0, 0.4)', borderLeft: '4px solid #ff9800', textAlign: 'left' }}>
+              <span className="label" style={{ color: '#ff9800', fontWeight: 'bold' }}>⚠️ Safety Buffer (1 Drink/Hr Rule)</span>
+              <p style={{ fontSize: '0.9rem', margin: '6px 0 0 0', color: '#ff9800' }}>
+                Govt. guidelines suggest you might not be safe until <strong>{new Date(safetySoberTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
+              </p>
+              <p className="help-text" style={{ fontSize: '0.75rem', marginTop: '6px', opacity: 0.8, color: '#eee' }}>
+                The "1 standard drink per hour" rule is a safer, more conservative estimate for larger body weights.
+              </p>
+            </div>
+          )}
+        </>
       )}
 
       <BACGraph drinks={drinks} profile={profile} now={now} />

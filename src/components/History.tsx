@@ -12,6 +12,20 @@ const History: React.FC<{ onEditClick: (drink: Drink) => void }> = ({ onEditClic
 
   const sessions = groupIntoSessions(drinks, profile);
 
+  const totalDrinks = drinks.length;
+  const totalAlcohol = sessions.reduce((sum, s) => sum + s.totalAlcoholGrams, 0);
+  const totalStandardDrinks = totalAlcohol / 10;
+  
+  const firstDrinkTime = drinks.length > 0 ? Math.min(...drinks.map(d => d.timestamp)) : Date.now();
+  const msInWeek = 7 * 24 * 3600000;
+  const weeksElapsed = Math.max(1, (Date.now() - firstDrinkTime) / msInWeek);
+  
+  const avgWeeklyDrinksCount = totalDrinks / weeksElapsed;
+  const avgWeeklyStandardDrinks = totalStandardDrinks / weeksElapsed;
+  const avgWeeklyAlcohol = totalAlcohol / weeksElapsed;
+  
+  const highestBAC = sessions.length > 0 ? Math.max(...sessions.map(s => s.peakBAC)) : 0;
+
   const formatDate = (ts: number) => {
     return new Date(ts).toLocaleDateString([], { 
       weekday: 'long', 
@@ -39,6 +53,35 @@ const History: React.FC<{ onEditClick: (drink: Drink) => void }> = ({ onEditClic
         onConfirm={() => { clearHistory(); setShowClearConfirm(false); }}
         onCancel={() => setShowClearConfirm(false)}
       />
+
+      {drinks.length > 0 && (
+        <div className="card stats-card" style={{ marginBottom: 'var(--spacing-md)' }}>
+          <h2 style={{ fontSize: '1.2rem', marginBottom: 'var(--spacing-sm)' }}>All-Time Stats</h2>
+          <div className="stats-grid">
+            <div className="stat-item">
+              <span className="label">Total Drinks</span>
+              <strong>{totalDrinks} <small>({totalStandardDrinks.toFixed(1)} std)</small></strong>
+            </div>
+            <div className="stat-item">
+              <span className="label">Avg Weekly Drinks</span>
+              <strong>{avgWeeklyDrinksCount.toFixed(1)} <small>({avgWeeklyStandardDrinks.toFixed(1)} std)</small></strong>
+            </div>
+            <div className="stat-item">
+              <span className="label">Total Alcohol</span>
+              <strong>{totalAlcohol.toFixed(1)}g</strong>
+            </div>
+            <div className="stat-item">
+              <span className="label">Avg Wkly Alcohol</span>
+              <strong>{avgWeeklyAlcohol.toFixed(1)}g</strong>
+            </div>
+            <div className="stat-item" style={{ gridColumn: 'span 2' }}>
+              <span className="label">Highest Recorded BAC</span>
+              <strong style={{ color: 'var(--danger)' }}>{formatBAC(highestBAC, profile.displayUnit)}{profile.displayUnit}</strong>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="history-header">
         <h2>Sessions</h2>
         {drinks.length > 0 && (
@@ -113,6 +156,32 @@ const History: React.FC<{ onEditClick: (drink: Drink) => void }> = ({ onEditClic
       <style>{`
         .history {
           padding-bottom: 80px;
+        }
+        .stats-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: var(--spacing-sm);
+        }
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          background: rgba(255,255,255,0.03);
+          padding: 10px;
+          border-radius: var(--border-radius);
+        }
+        .stat-item .label {
+          font-size: 0.7rem;
+          text-transform: uppercase;
+          opacity: 0.6;
+          margin-bottom: 4px;
+        }
+        .stat-item strong {
+          font-size: 1.1rem;
+        }
+        .stat-item small {
+          font-weight: normal;
+          opacity: 0.7;
+          font-size: 0.8rem;
         }
         .history-header {
           display: flex;
