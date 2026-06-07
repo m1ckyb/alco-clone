@@ -1,4 +1,5 @@
 ### Added
+- Dependabot configuration added to monitor the `dev` branch for npm and GitHub Action dependency updates.
 - PWA reload prompt UI that notifies users when a new version of the app is available.
 - Service worker `skipWaiting` configuration to gracefully activate new updates.
 
