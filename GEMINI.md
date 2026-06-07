@@ -12,9 +12,9 @@ CRITICAL: Every time you make a change to the codebase that affects functionalit
         Ensure the documentation reflects any changes to features, configuration, or usage.
         Perform this update in the same turn as the code changes.
 
-    Rebuild Local Container:
-        After making changes, always rebuild and restart the local development container to verify the fix/feature.
-        Command: docker-compose -f docker-compose-dev.yml up -d --build
+    Verify Local Build:
+        After making changes, always run the build command to ensure the project compiles successfully and verify the fix/feature.
+        Command: npm run build
 
     Git Push Restriction:
         NEVER push code to GitHub (e.g., git push) unless the user explicitly instructs you to do so.
@@ -43,7 +43,6 @@ When requested to "Make a release", where <type> is Patch, Minor, or Major, the 
 
     Update VERSION.txt: Change the content of VERSION.txt to the new version number.
 
-    Update docker-compose.yml: Update the image tags for the services to the new version number.
 
     Update Documentation: Review README.md and other docs to reflect new features or significant changes.
 
