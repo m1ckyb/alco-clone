@@ -820,7 +820,46 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           background: transparent;
           color: var(--error);
         }
-      `})]})};function bR(){let[e,t]=(0,v.useState)(`dashboard`),[n,r]=(0,v.useState)(!1),[i,a]=(0,v.useState)(void 0),o=e=>{a(e),r(!0)};return(0,x.jsxs)(x.Fragment,{children:[(0,x.jsx)(`header`,{className:`app-header`,children:(0,x.jsx)(`h1`,{children:`SipWise`})}),(0,x.jsxs)(`main`,{children:[e===`dashboard`&&(0,x.jsx)(cR,{onAddClick:()=>o()}),e===`history`&&(0,x.jsx)(uR,{onEditClick:o}),e===`profile`&&(0,x.jsx)(vR,{})]}),(0,x.jsx)(yR,{isOpen:n,onClose:()=>{r(!1),a(void 0)},editDrink:i}),(0,x.jsx)(S,{currentView:e,setView:t}),(0,x.jsx)(`style`,{children:`
+      `})]})},bR=`false`,xR=`false`,SR=bR===`true`,CR=xR===`true`;function wR(e={}){let{immediate:t=!1,onNeedReload:n,onNeedRefresh:r,onOfflineReady:i,onRegistered:a,onRegisteredSW:o,onRegisterError:s}=e,c,l,u,d=async(e=!0)=>{await l,SR||u?.()};async function f(){if(`serviceWorker`in navigator){if(c=await R(async()=>{let{Workbox:e}=await import(`./workbox-window.prod.es5-Bd17z0YL.js`);return{Workbox:e}},[]).then(({Workbox:e})=>new e(`/sw.js`,{scope:`/`,type:`classic`})).catch(e=>{s?.(e)}),!c)return;if(u=()=>{c?.messageSkipWaiting()},!CR)if(SR)c.addEventListener(`activated`,e=>{(e.isUpdate||e.isExternal)&&(n?n():window.location.reload())}),c.addEventListener(`installed`,e=>{e.isUpdate||i?.()});else{let e=!1,t=()=>{e=!0,c?.addEventListener(`controlling`,e=>{e.isUpdate&&(n?n():window.location.reload())}),r?.()};c.addEventListener(`installed`,n=>{n.isUpdate===void 0?n.isExternal===void 0?!e&&i?.():n.isExternal?t():!e&&i?.():n.isUpdate||i?.()}),c.addEventListener(`waiting`,t)}c.register({immediate:t}).then(e=>{o?o(`/sw.js`,e):a?.(e)}).catch(e=>{s?.(e)})}}return l=f(),d}function TR(e={}){let{immediate:t=!0,onNeedReload:n,onNeedRefresh:r,onOfflineReady:i,onRegistered:a,onRegisteredSW:o,onRegisterError:s}=e,[c,l]=(0,v.useState)(!1),[u,d]=(0,v.useState)(!1),[f]=(0,v.useState)(()=>wR({immediate:t,onNeedReload:n,onOfflineReady(){d(!0),i?.()},onNeedRefresh(){l(!0),r?.()},onRegistered:a,onRegisteredSW:o,onRegisterError:s}));return{needRefresh:[c,l],offlineReady:[u,d],updateServiceWorker:f}}var ER=()=>{let{offlineReady:[e,t],needRefresh:[n,r],updateServiceWorker:i}=TR({onRegistered(e){console.log(`SW Registered: `,e)},onRegisterError(e){console.log(`SW registration error`,e)}}),a=()=>{t(!1),r(!1)};return!e&&!n?null:(0,x.jsxs)(`div`,{className:`reload-prompt-container`,children:[(0,x.jsxs)(`div`,{className:`reload-prompt-toast`,children:[(0,x.jsx)(`div`,{className:`reload-prompt-message`,children:e?(0,x.jsx)(`span`,{children:`App ready to work offline`}):(0,x.jsx)(`span`,{children:`New content available, click on reload button to update.`})}),(0,x.jsxs)(`div`,{className:`reload-prompt-buttons`,children:[n&&(0,x.jsx)(`button`,{className:`btn btn-primary`,onClick:()=>i(!0),children:`Reload`}),(0,x.jsx)(`button`,{className:`btn btn-secondary`,onClick:()=>a(),children:`Close`})]})]}),(0,x.jsx)(`style`,{children:`
+        .reload-prompt-container {
+          position: fixed;
+          bottom: 80px;
+          right: 0;
+          left: 0;
+          display: flex;
+          justify-content: center;
+          z-index: 1000;
+          padding: 0 var(--spacing-md);
+          pointer-events: none;
+        }
+        .reload-prompt-toast {
+          background: var(--surface);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: var(--border-radius);
+          padding: var(--spacing-md);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+          width: 100%;
+          max-width: 400px;
+          pointer-events: auto;
+          display: flex;
+          flex-direction: column;
+          gap: var(--spacing-sm);
+        }
+        .reload-prompt-message {
+          font-size: 0.9rem;
+          color: var(--on-surface);
+        }
+        .reload-prompt-buttons {
+          display: flex;
+          gap: var(--spacing-sm);
+          justify-content: flex-end;
+        }
+        .reload-prompt-buttons .btn {
+          padding: 6px 12px;
+          font-size: 0.85rem;
+          flex: none;
+        }
+      `})]})};function DR(){let[e,t]=(0,v.useState)(`dashboard`),[n,r]=(0,v.useState)(!1),[i,a]=(0,v.useState)(void 0),o=e=>{a(e),r(!0)};return(0,x.jsxs)(x.Fragment,{children:[(0,x.jsx)(`header`,{className:`app-header`,children:(0,x.jsx)(`h1`,{children:`SipWise`})}),(0,x.jsxs)(`main`,{children:[e===`dashboard`&&(0,x.jsx)(cR,{onAddClick:()=>o()}),e===`history`&&(0,x.jsx)(uR,{onEditClick:o}),e===`profile`&&(0,x.jsx)(vR,{})]}),(0,x.jsx)(yR,{isOpen:n,onClose:()=>{r(!1),a(void 0)},editDrink:i}),(0,x.jsx)(ER,{}),(0,x.jsx)(S,{currentView:e,setView:t}),(0,x.jsx)(`style`,{children:`
         .app-header {
           padding: var(--spacing-md) 0;
           text-align: center;
@@ -835,4 +874,4 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         main {
           flex: 1;
         }
-      `})]})}(0,y.createRoot)(document.getElementById(`root`)).render((0,x.jsx)(v.StrictMode,{children:(0,x.jsx)(Ca,{children:(0,x.jsx)(bR,{})})}));
+      `})]})}(0,y.createRoot)(document.getElementById(`root`)).render((0,x.jsx)(v.StrictMode,{children:(0,x.jsx)(Ca,{children:(0,x.jsx)(DR,{})})}));
