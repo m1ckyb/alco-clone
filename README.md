@@ -27,7 +27,7 @@ SipWise is a Blood Alcohol Content (BAC) calculator and consumption tracker web 
 
 ### Prerequisites
 
-- Node.js (v20 or higher recommended)
+- Node.js (v24 or higher recommended)
 - npm
 - A Supabase account and project
 
