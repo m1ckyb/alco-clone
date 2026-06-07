@@ -21,6 +21,7 @@ interface AppContextType {
   isSyncing: boolean;
   signOut: () => Promise<void>;
   pullFromCloud: () => Promise<void>;
+  storageWarning: string | null;
 }
 
 const DEFAULT_PROFILE: Profile = {
@@ -41,10 +42,24 @@ const DEFAULT_PRESETS: Omit<Drink, 'id' | 'timestamp'>[] = [
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+/** Safe localStorage write — warns on quota exceeded instead of silently failing */
+function safeSetItem(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+      console.error('[SipWise] localStorage quota exceeded. Some data may not have been saved.', key);
+    } else {
+      throw e;
+    }
+  }
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [lastSynced, setLastSynced] = useState<string | null>(localStorage.getItem('alcoclone_last_synced'));
   const [isSyncing, setIsSyncing] = useState(false);
+  const [storageWarning, setStorageWarning] = useState<string | null>(null);
 
   const [profile, setProfileState] = useState<Profile>(() => {
     const saved = localStorage.getItem('alcoclone_profile');
@@ -74,15 +89,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   useEffect(() => {
-    localStorage.setItem('alcoclone_profile', JSON.stringify(profile));
+    safeSetItem('alcoclone_profile', JSON.stringify(profile));
   }, [profile]);
 
   useEffect(() => {
-    localStorage.setItem('alcoclone_drinks', JSON.stringify(drinks));
+    safeSetItem('alcoclone_drinks', JSON.stringify(drinks));
+    // Warn if drink history is getting large (>500 entries)
+    if (drinks.length > 500) {
+      setStorageWarning(`You have ${drinks.length} drink entries. Consider exporting and clearing old history to keep the app running smoothly.`);
+    } else {
+      setStorageWarning(null);
+    }
   }, [drinks]);
 
   useEffect(() => {
-    localStorage.setItem('alcoclone_presets', JSON.stringify(presets));
+    safeSetItem('alcoclone_presets', JSON.stringify(presets));
   }, [presets]);
 
   // Auth Listener
@@ -115,7 +136,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (!error) {
         const now = new Date().toLocaleString();
         setLastSynced(now);
-        localStorage.setItem('alcoclone_last_synced', now);
+        safeSetItem('alcoclone_last_synced', now);
       }
     } catch (err) {
       console.error('Push to cloud failed:', err);
@@ -140,7 +161,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (data.presets) setPresets(data.presets);
         const now = new Date().toLocaleString();
         setLastSynced(now);
-        localStorage.setItem('alcoclone_last_synced', now);
+        safeSetItem('alcoclone_last_synced', now);
       }
     } catch (err) {
       console.error('Pull from cloud failed:', err);
@@ -171,7 +192,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addDrink = (drink: Omit<Drink, 'id'>) => {
     const newDrink: Drink = {
       ...drink,
-      id: Math.random().toString(36).substring(2, 9),
+      id: crypto.randomUUID(),
     };
     setDrinks(prev => [...prev, newDrink]);
   };
@@ -225,10 +246,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [drinks, presets]);
 
+  // clearHistory just clears — confirmation is handled by the calling UI component
   const clearHistory = () => {
-    if (window.confirm('Are you sure you want to clear all drink history?')) {
-      setDrinks([]);
-    }
+    setDrinks([]);
   };
 
   const importData = (data: { profile?: Profile; drinks?: Drink[]; presets?: Omit<Drink, 'id' | 'timestamp'>[] }) => {
@@ -242,6 +262,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setUser(null);
     setLastSynced(null);
     localStorage.removeItem('alcoclone_last_synced');
+    setStorageWarning(null);
   };
 
   return (
@@ -252,7 +273,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       clearHistory,
       importData,
       user, lastSynced, isSyncing,
-      signOut, pullFromCloud
+      signOut, pullFromCloud,
+      storageWarning,
     }}>
       {children}
     </AppContext.Provider>

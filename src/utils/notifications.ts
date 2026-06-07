@@ -1,6 +1,13 @@
 import { supabase } from './supabase';
 
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BDd0rMTptcSWGYT3ubk6-pYI6JYdeDRfUZkR-xHWPvFXs7IzCvr53VrLKLOpPJI0BPKFKwqXzP13yS2ttR49NSA';
+const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+if (!VAPID_PUBLIC_KEY) {
+  console.error(
+    '[SipWise] VITE_VAPID_PUBLIC_KEY is not set. Push notifications will not work. ' +
+    'Add it to your .env file or GitHub Actions secrets.'
+  );
+}
+
 
 // Helper to convert VAPID public key to Uint8Array
 function urlBase64ToUint8Array(base64String: string) {
@@ -38,6 +45,10 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 // Subscribe user to push notifications
 export async function subscribeUserToPush(): Promise<PushSubscription | null> {
   if (!isPushSupported()) return null;
+
+  if (!VAPID_PUBLIC_KEY) {
+    throw new Error('Push notifications are not configured. VAPID key is missing.');
+  }
 
   const registration = await navigator.serviceWorker.ready;
   

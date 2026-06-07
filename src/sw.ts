@@ -11,28 +11,39 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 // Handle push events
 self.addEventListener('push', (event) => {
-  let data = { title: 'SipWise', body: 'Time to check your BAC!' };
+  let data: { title?: string; body?: string } = {};
   
   if (event.data) {
     try {
       data = event.data.json();
-    } catch (err) {
-      data = { title: 'SipWise', body: event.data.text() };
+    } catch {
+      data = { body: event.data.text() };
     }
   }
 
-  const options: any = {
-    body: data.body,
+  // Validate and sanitise payload fields to prevent spoofed notifications
+  const title =
+    typeof data.title === 'string' && data.title.length > 0 && data.title.length <= 100
+      ? data.title
+      : 'SipWise';
+  const body =
+    typeof data.body === 'string' && data.body.length > 0 && data.body.length <= 250
+      ? data.body
+      : 'Time to check your BAC!';
+
+  const options = {
+    body,
     icon: '/favicon.svg',
     badge: '/favicon.svg',
     vibrate: [100, 50, 100],
-    data: data,
-  };
+    data: { url: self.registration.scope },
+  } as NotificationOptions;
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'SipWise', options)
+    self.registration.showNotification(title, options)
   );
 });
+
 
 // Handle notification click events
 self.addEventListener('notificationclick', (event) => {

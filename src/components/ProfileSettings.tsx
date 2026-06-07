@@ -3,6 +3,7 @@ import { useAppContext } from '../context/AppContext';
 import { calculateWidmarkR } from '../utils/bac';
 import type { Drink } from '../utils/bac';
 import { supabase } from '../utils/supabase';
+import ConfirmModal from './ConfirmModal';
 import { 
   isPushSupported, 
   requestNotificationPermission, 
@@ -15,7 +16,7 @@ import {
 const ProfileSettings: React.FC = () => {
   const { 
     profile, setProfile, drinks, presets, removePreset, updatePreset, importData,
-    user, lastSynced, isSyncing, signOut, pullFromCloud 
+    user, lastSynced, isSyncing, signOut, pullFromCloud, storageWarning
   } = useAppContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -27,6 +28,22 @@ const ProfileSettings: React.FC = () => {
   const [syncStatus, setSyncStatus] = useState<'synced' | 'local' | 'error' | null>(null);
   const [testNotificationTimer, setTestNotificationTimer] = useState<number | null>(null);
   const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
+
+  // Confirm modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({ open: false, title: '', message: '', onConfirm: () => {} });
+
+  const showConfirm = (title: string, message: string, onConfirm: () => void) => {
+    setConfirmModal({ open: true, title, message, onConfirm });
+  };
+  const closeConfirm = () => setConfirmModal(prev => ({ ...prev, open: false }));
+
+  // Pending import data awaiting confirmation (tracked via confirm modal)
+  const [, setPendingImport] = useState<Parameters<typeof importData>[0] | null>(null);
 
   // Collapsible sections state
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -94,7 +111,7 @@ const ProfileSettings: React.FC = () => {
           setSubscriptionEndpoint(null);
           setSyncStatus(null);
         } else {
-          alert('Failed to unsubscribe from push notifications.');
+          alert('Failed to unsubscribe from push notifications. Please try again.');
         }
       } else {
         // Subscribe
@@ -109,15 +126,15 @@ const ProfileSettings: React.FC = () => {
             const synced = await syncSubscriptionToSupabase(sub);
             setSyncStatus(synced ? 'synced' : 'local');
           } else {
-            alert('Failed to subscribe to push service.');
+            alert('Failed to subscribe to push notifications. Please try again.');
           }
         } else {
-          alert('Notification permission denied.');
+          alert('Notification permission denied. Please enable notifications in your browser settings.');
         }
       }
-    } catch (err: any) {
-      console.error(err);
-      alert('Error toggling notifications: ' + err.message);
+    } catch (err) {
+      console.error('Notification toggle error:', err);
+      alert('Something went wrong with push notifications. Please try again.');
     }
   };
 
@@ -141,8 +158,9 @@ const ProfileSettings: React.FC = () => {
       } else {
         await triggerLocalTestNotification(0);
       }
-    } catch (err: any) {
-      alert('Error triggering test notification: ' + err.message);
+    } catch (err) {
+      console.error('Test notification error:', err);
+      alert('Failed to send test notification. Please check that notifications are enabled.');
     }
   };
 
@@ -179,9 +197,16 @@ const ProfileSettings: React.FC = () => {
         ? await supabase.auth.signInWithPassword({ email, password })
         : await supabase.auth.signUp({ email, password });
       
-      if (error) setAuthError(error.message);
-    } catch (err: any) {
-      setAuthError(err.message);
+      // Use a generic message to avoid leaking whether the email is registered
+      if (error) {
+        setAuthError(
+          authMode === 'login'
+            ? 'Invalid email or password. Please try again.'
+            : 'Could not create account. The email may already be registered.'
+        );
+      }
+    } catch {
+      setAuthError('An unexpected error occurred. Please try again.');
     }
   };
 
@@ -217,6 +242,40 @@ const ProfileSettings: React.FC = () => {
     fileInputRef.current?.click();
   };
 
+  /** Validate the shape and value ranges of an import payload */
+  function validateImportData(data: unknown): data is Parameters<typeof importData>[0] {
+    if (!data || typeof data !== 'object') return false;
+    const d = data as Record<string, unknown>;
+
+    if (d.profile !== undefined) {
+      const p = d.profile as Record<string, unknown>;
+      if (typeof p.weight !== 'number' || p.weight < 20 || p.weight > 400) return false;
+      if (p.gender !== 'male' && p.gender !== 'female') return false;
+      if (typeof p.height !== 'number' || p.height < 50 || p.height > 300) return false;
+      if (typeof p.age !== 'number' || p.age < 1 || p.age > 130) return false;
+      if (typeof p.metabolismRate !== 'number' || p.metabolismRate < 0.001 || p.metabolismRate > 0.5) return false;
+    }
+
+    if (d.drinks !== undefined) {
+      if (!Array.isArray(d.drinks)) return false;
+      if (d.drinks.length > 10000) return false; // Reject unreasonably large payloads
+      for (const drink of d.drinks) {
+        if (typeof drink !== 'object' || drink === null) return false;
+        const dr = drink as Record<string, unknown>;
+        if (typeof dr.volume !== 'number' || dr.volume < 0 || dr.volume > 5000) return false;
+        if (typeof dr.abv !== 'number' || dr.abv < 0 || dr.abv > 100) return false;
+        if (typeof dr.timestamp !== 'number') return false;
+      }
+    }
+
+    if (d.presets !== undefined) {
+      if (!Array.isArray(d.presets)) return false;
+      if (d.presets.length > 100) return false;
+    }
+
+    return true;
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -225,17 +284,27 @@ const ProfileSettings: React.FC = () => {
     reader.onload = (event) => {
       try {
         const content = event.target?.result as string;
-        const data = JSON.parse(content);
-        
-        if (window.confirm('This will overwrite your current profile, drinks, and presets. Continue?')) {
-          importData(data);
-          alert('Data imported successfully!');
+        const parsed = JSON.parse(content);
+
+        if (!validateImportData(parsed)) {
+          alert('Invalid backup file: data failed validation. Please use a valid SipWise export.');
+          return;
         }
-      } catch (error) {
-        console.error('Failed to parse import file:', error);
-        alert('Invalid backup file. Please make sure it is a valid JSON exported from this app.');
+
+        setPendingImport(parsed);
+        showConfirm(
+          'Import Data',
+          'This will overwrite your current profile, drinks, and presets. Are you sure?',
+          () => {
+            importData(parsed);
+            setPendingImport(null);
+            alert('Data imported successfully!');
+          }
+        );
+      } catch {
+        alert('Invalid backup file. Please make sure it is a valid JSON file exported from SipWise.');
       }
-      // Reset input value to allow importing the same file again if needed
+      // Reset input so the same file can be re-imported if needed
       e.target.value = '';
     };
     reader.readAsText(file);
@@ -243,10 +312,26 @@ const ProfileSettings: React.FC = () => {
 
   return (
     <div className="profile-settings">
+      <ConfirmModal
+        isOpen={confirmModal.open}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmLabel="Yes, continue"
+        danger={true}
+        onConfirm={() => { confirmModal.onConfirm(); closeConfirm(); }}
+        onCancel={closeConfirm}
+      />
+
       <div className="settings-header">
         <h2>Personal Profile</h2>
         <p>Correct weight and gender are essential for accurate BAC estimation using the Widmark formula.</p>
       </div>
+
+      {storageWarning && (
+        <div className="storage-warning-banner" role="alert">
+          ⚠️ {storageWarning}
+        </div>
+      )}
       
       <div className="card settings-card">
         {/* Section 1: Body Metrics */}
@@ -674,6 +759,16 @@ const ProfileSettings: React.FC = () => {
       <style>{`
         .profile-settings {
           padding-bottom: 80px;
+        }
+        .storage-warning-banner {
+          background: rgba(255, 152, 0, 0.15);
+          border: 1px solid rgba(255, 152, 0, 0.4);
+          border-radius: var(--border-radius);
+          color: #ff9800;
+          font-size: 0.8rem;
+          padding: 10px var(--spacing-md);
+          margin-bottom: var(--spacing-md);
+          line-height: 1.4;
         }
         .settings-header {
           margin-bottom: var(--spacing-lg);

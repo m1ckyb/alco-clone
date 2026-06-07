@@ -3,10 +3,12 @@ import { useAppContext } from '../context/AppContext';
 import { groupIntoSessions, formatBAC } from '../utils/bac';
 import type { Drink } from '../utils/bac';
 import BACGraph from './BACGraph';
+import ConfirmModal from './ConfirmModal';
 
 const History: React.FC<{ onEditClick: (drink: Drink) => void }> = ({ onEditClick }) => {
   const { drinks, profile, removeDrink, clearHistory } = useAppContext();
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const sessions = groupIntoSessions(drinks, profile);
 
@@ -28,10 +30,19 @@ const History: React.FC<{ onEditClick: (drink: Drink) => void }> = ({ onEditClic
 
   return (
     <div className="history">
+      <ConfirmModal
+        isOpen={showClearConfirm}
+        title="Clear All History"
+        message="Are you sure you want to permanently delete all drink history? This cannot be undone."
+        confirmLabel="Yes, clear all"
+        danger={true}
+        onConfirm={() => { clearHistory(); setShowClearConfirm(false); }}
+        onCancel={() => setShowClearConfirm(false)}
+      />
       <div className="history-header">
         <h2>Sessions</h2>
         {drinks.length > 0 && (
-          <button className="clear-btn" onClick={clearHistory}>Clear All</button>
+          <button className="clear-btn" onClick={() => setShowClearConfirm(true)}>Clear All</button>
         )}
       </div>
 

@@ -1,6 +1,45 @@
--- SQL commands to run in your Supabase SQL Editor to set up Push Notifications support.
+-- SQL commands to run in your Supabase SQL Editor.
+-- Run this file to set up both Cloud Sync and Push Notification support.
 
--- 1. Create the push_subscriptions table
+-- ============================================================
+-- 1. user_data table (Cloud Sync)
+-- ============================================================
+
+-- Create table if it doesn't already exist
+create table if not exists public.user_data (
+  id uuid primary key references auth.users(id) on delete cascade,
+  profile jsonb,
+  drinks jsonb,
+  presets jsonb,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable Row Level Security
+alter table public.user_data enable row level security;
+
+-- Users can only read and write their own row
+create policy "Users can read own data"
+  on public.user_data for select
+  using (auth.uid() = id);
+
+create policy "Users can insert own data"
+  on public.user_data for insert
+  with check (auth.uid() = id);
+
+create policy "Users can update own data"
+  on public.user_data for update
+  using (auth.uid() = id)
+  with check (auth.uid() = id);
+
+create policy "Users can delete own data"
+  on public.user_data for delete
+  using (auth.uid() = id);
+
+
+-- ============================================================
+-- 2. push_subscriptions table (Push Notifications)
+-- ============================================================
+
 create table if not exists public.push_subscriptions (
   endpoint text primary key,
   user_id uuid references auth.users(id) on delete cascade,
@@ -9,53 +48,56 @@ create table if not exists public.push_subscriptions (
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 2. Enable Row Level Security (RLS)
+-- Enable Row Level Security
 alter table public.push_subscriptions enable row level security;
 
--- 3. Set up RLS Policies
--- Allow anyone to subscribe (handles both anonymous and authenticated users)
-create policy "Allow insert access for all"
+-- Restrict inserts to authenticated users only (prevents anonymous spam)
+create policy "Allow insert for authenticated users only"
   on public.push_subscriptions for insert
-  with check (true);
+  with check (auth.uid() is not null and auth.uid() = user_id);
 
--- Allow users to manage (view/update/delete) their own subscriptions
+-- Allow users to manage their own subscriptions
 create policy "Allow select access for owner"
   on public.push_subscriptions for select
-  using (auth.uid() = user_id or user_id is null);
+  using (auth.uid() = user_id);
 
 create policy "Allow update access for owner"
   on public.push_subscriptions for update
-  using (auth.uid() = user_id or user_id is null);
+  using (auth.uid() = user_id);
 
 create policy "Allow delete access for owner"
   on public.push_subscriptions for delete
-  using (auth.uid() = user_id or user_id is null);
+  using (auth.uid() = user_id);
 
--- 4. Set up an automatic trigger to update the updated_at timestamp
+
+-- ============================================================
+-- 3. Auto-update triggers
+-- ============================================================
+
 create or replace function public.handle_updated_at()
 returns trigger as $$
 begin
   new.updated_at = now();
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql security definer;
 
 create or replace trigger set_push_subscriptions_updated_at
   before update on public.push_subscriptions
   for each row
   execute function public.handle_updated_at();
 
--- Note for developers:
--- To send a push notification from your backend (e.g. Supabase Edge Functions or Node.js),
--- you would query this table for the user's subscription, and use the 'web-push' library
--- with your VAPID keys to send the payload.
+
+-- ============================================================
+-- Developer notes
+-- ============================================================
+-- To send a push notification from Supabase Edge Functions or a Node.js backend:
 --
--- Example Node.js push snippet:
 -- const webpush = require('web-push');
 -- webpush.setVapidDetails(
 --   'mailto:your-email@example.com',
---   'BDd0rMTptcSWGYT3ubk6-pYI6JYdeDRfUZkR-xHWPvFXs7IzCvr53VrLKLOpPJI0BPKFKwqXzP13yS2ttR49NSA', // VAPID Public Key
---   'YOUR_VAPID_PRIVATE_KEY'
+--   process.env.VITE_VAPID_PUBLIC_KEY,   // from your .env / GitHub secret
+--   process.env.VAPID_PRIVATE_KEY        // keep this server-side ONLY, never in .env committed to git
 -- );
 -- webpush.sendNotification(subscriptionObj, JSON.stringify({
 --   title: 'Sober Alert!',
