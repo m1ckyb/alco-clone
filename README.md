@@ -1,5 +1,7 @@
 # SipWise
 
+**⚠️ Disclaimer: This app was developed by AI. Use at your own risk.**
+
 SipWise is a Blood Alcohol Content (BAC) calculator and consumption tracker web application. It helps users monitor their estimated alcohol levels in real-time based on their profile and drink history.
 
 ## Features

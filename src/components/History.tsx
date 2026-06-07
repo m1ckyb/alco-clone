@@ -110,6 +110,10 @@ const History: React.FC<{ onEditClick: (drink: Drink) => void }> = ({ onEditClic
                     <span className="value">{formatBAC(session.peakBAC, profile.displayUnit)}{profile.displayUnit}</span>
                   </div>
                   <div className="stat">
+                    <span className="label">Drinks</span>
+                    <span className="value">{session.drinks.length}</span>
+                  </div>
+                  <div className="stat">
                     <span className="label">Total</span>
                     <span className="value">{session.totalAlcoholGrams.toFixed(1)}g</span>
                   </div>
