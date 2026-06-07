@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard';
 import History from './components/History';
 import ProfileSettings from './components/ProfileSettings';
 import DrinkLogger from './components/DrinkLogger';
+import ReloadPrompt from './components/ReloadPrompt';
 import type { Drink } from './utils/bac';
 
 function App() {
@@ -41,6 +42,8 @@ function App() {
         onClose={closeLogger}
         editDrink={editingDrink}
       />
+
+      <ReloadPrompt />
 
       <NavBar currentView={currentView} setView={setCurrentView} />
 
