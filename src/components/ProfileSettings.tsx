@@ -757,7 +757,7 @@ const ProfileSettings: React.FC = () => {
       </div>
 
       <div className="version-info" style={{ textAlign: 'center', marginTop: 'var(--spacing-lg)', opacity: 0.5, fontSize: '0.8rem' }}>
-        SipWise v0.1.0
+        SipWise v0.1.1
       </div>
 
       <style>{`
