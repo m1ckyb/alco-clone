@@ -59,6 +59,73 @@ SipWise is a Blood Alcohol Content (BAC) calculator and consumption tracker web 
 
 ---
 
+## API for Home Assistant & Integrations
+
+You can query your live BAC data via a Supabase Edge Function. This allows integrations like Home Assistant to fetch your exact alcohol status securely using an API key.
+
+### 1. Database Setup
+1. Open the Supabase Dashboard -> SQL Editor.
+2. Run the provided `supabase_api_keys_setup.sql` script. This creates the `api_keys` table.
+3. Once created, insert a new row in the `api_keys` table:
+   - Provide your Supabase User ID in `user_id`.
+   - Provide a securely generated string for `key` (this will be your API Key).
+
+### 2. Deploy Edge Function
+Ensure you have the Supabase CLI installed, then run:
+```bash
+supabase functions deploy api
+```
+*Note: Make sure your Edge Function has access to the `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_URL` via the Supabase Dashboard -> Edge Functions -> Secrets.*
+
+### 3. API Usage
+
+Make requests to your Edge Function URL:
+**Endpoint:** `https://<YOUR_SUPABASE_PROJECT_REF>.supabase.co/functions/v1/api`
+
+**Headers (Required for all requests):**
+- `x-api-key`: Your generated API Key from step 1.
+
+#### GET Request (Fetch BAC & Drinks)
+You can append `?limit=10` to limit the number of returned drinks (default is 50).
+
+**Response Example:**
+```json
+{
+  "current_bac": 0.045,
+  "time_to_zero_hours": 3.0,
+  "is_sober": false,
+  "recent_drinks_24h_count": 3,
+  "last_drink_time": "2026-06-09T08:00:00.000Z",
+  "unit": "%",
+  "drinks": [
+    {
+      "id": "e81e1a5a-8d19-48c5-9c8e-324200b3e7f4",
+      "volume": 330,
+      "abv": 5.0,
+      "name": "Beer",
+      "timestamp": 1715000000000,
+      "timestamp_iso": "2024-05-06T12:53:20.000Z"
+    }
+  ]
+}
+```
+
+#### POST Request (Add Drink)
+
+**Body:**
+```json
+{
+  "action": "add_drink",
+  "volume": 330,
+  "abv": 5.0,
+  "name": "Beer",
+  "timestamp": 1715000000000 
+}
+```
+*Note: `timestamp` is optional. If omitted, the current time is used.*
+
+---
+
 ## Deployment to GitHub Pages
 
 This project is configured for automated deployment via GitHub Actions.
