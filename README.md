@@ -74,7 +74,7 @@ You can query your live BAC data via a Supabase Edge Function. This allows integ
 ### 2. Deploy Edge Function
 Ensure you have the Supabase CLI installed, then run:
 ```bash
-supabase functions deploy api
+supabase functions deploy api --no-verify-jwt
 ```
 *Note: Make sure your Edge Function has access to the `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_URL` via the Supabase Dashboard -> Edge Functions -> Secrets.*
 
