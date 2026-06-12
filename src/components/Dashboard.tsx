@@ -4,7 +4,7 @@ import { calculateBAC, calculateTimeToZero, formatBAC, groupIntoSessions } from 
 import BACGraph from './BACGraph';
 
 const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
-  const { drinks, profile } = useAppContext();
+  const { drinks, profile, addDrink } = useAppContext();
   const [currentBAC, setCurrentBAC] = useState(0);
   const [timeToZero, setTimeToZero] = useState(0);
   const [now, setNow] = useState(() => Date.now());
@@ -115,9 +115,23 @@ const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
 
       <BACGraph drinks={drinks} profile={profile} now={now} />
 
-      <button className="add-drink-btn" onClick={onAddClick}>
-        + Add Drink
-      </button>
+      <div className="action-buttons">
+        {profile.quickDrink && (
+          <button className="quick-drink-btn" onClick={() => {
+            addDrink({
+              timestamp: Date.now(),
+              volume: profile.quickDrink!.volume,
+              abv: profile.quickDrink!.abv,
+              name: profile.quickDrink!.name
+            });
+          }}>
+            ⚡ Quick {profile.quickDrink.name}
+          </button>
+        )}
+        <button className="add-drink-btn" onClick={onAddClick}>
+          + Add Drink
+        </button>
+      </div>
 
       <style>{`
         .dashboard {
@@ -164,14 +178,26 @@ const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
         .info-card {
           text-align: center;
         }
+        .action-buttons {
+          display: flex;
+          gap: var(--spacing-md);
+          margin-top: var(--spacing-lg);
+        }
         .add-drink-btn {
-          width: 100%;
+          flex: 1;
           padding: var(--spacing-lg);
           font-size: 1.2rem;
           background: var(--primary);
           color: var(--on-primary);
           box-shadow: 0 4px 15px rgba(0, 59, 111, 0.4);
-          margin-top: var(--spacing-lg);
+        }
+        .quick-drink-btn {
+          flex: 1;
+          padding: var(--spacing-lg);
+          font-size: 1.2rem;
+          background: var(--secondary, #4CAF50);
+          color: white;
+          box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
         }
       `}</style>
     </div>
