@@ -116,6 +116,9 @@ const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
       <BACGraph drinks={drinks} profile={profile} now={now} />
 
       <div className="action-buttons">
+        <button className="add-drink-btn" onClick={onAddClick}>
+          + Add Drink
+        </button>
         {profile.quickDrink && (
           <button className="quick-drink-btn" onClick={() => {
             addDrink({
@@ -128,9 +131,6 @@ const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
             ⚡ Quick {profile.quickDrink.name}
           </button>
         )}
-        <button className="add-drink-btn" onClick={onAddClick}>
-          + Add Drink
-        </button>
       </div>
 
       <style>{`
