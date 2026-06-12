@@ -533,6 +533,13 @@ const ProfileSettings: React.FC = () => {
                               >
                                 ✕
                               </button>
+                              <button
+                                className="set-quick-drink-btn"
+                                onClick={() => setProfile({ ...profile, quickDrink: { name: preset.name!, volume: preset.volume, abv: preset.abv } })}
+                                title={profile.quickDrink?.name === preset.name ? "Current Quick Drink" : "Set as Quick Drink"}
+                              >
+                                {profile.quickDrink?.name === preset.name ? '★' : '☆'}
+                              </button>
                             </div>
                           </>
                         )}
@@ -757,7 +764,7 @@ const ProfileSettings: React.FC = () => {
       </div>
 
       <div className="version-info" style={{ textAlign: 'center', marginTop: 'var(--spacing-lg)', opacity: 0.5, fontSize: '0.8rem' }}>
-        SipWise v0.1.1
+        SipWise v0.1.3
       </div>
 
       <style>{`
@@ -926,6 +933,20 @@ const ProfileSettings: React.FC = () => {
         }
         .remove-preset-btn:hover {
           opacity: 1;
+        }
+        .set-quick-drink-btn {
+          background: transparent;
+          color: var(--primary);
+          border: none;
+          padding: 4px 8px;
+          font-size: 1rem;
+          cursor: pointer;
+          opacity: 0.8;
+          transition: opacity 0.2s, transform 0.2s;
+        }
+        .set-quick-drink-btn:hover {
+          opacity: 1;
+          transform: scale(1.1);
         }
         .preset-actions {
           display: flex;

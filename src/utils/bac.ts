@@ -13,6 +13,11 @@ export interface Profile {
   displayUnit: '%' | '‰';
   height: number; // cm
   age: number; // years
+  quickDrink?: {
+    name: string;
+    volume: number;
+    abv: number;
+  };
 }
 
 export const GENDER_CONSTANTS = {

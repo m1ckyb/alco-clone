@@ -8,6 +8,7 @@ SipWise is a Blood Alcohol Content (BAC) calculator and consumption tracker web 
 
 - **BAC Calculator:** Real-time estimation of Blood Alcohol Content.
 - **Drink Logger:** Easily log drinks with preset types (Beer, Wine, Spirits).
+- **Quick Drink:** Instantly add your favorite drink from the dashboard.
 - **History Tracking:** View a chronological log of your drinks.
 - **BAC Graph:** Visual representation of your BAC over time.
 - **PWA Support:** Installable on mobile and desktop for offline use.
