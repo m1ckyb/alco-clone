@@ -114,12 +114,24 @@ export function generateBACGraphData(drinks: Drink[], profile: Profile, now: num
 
   const sortedDrinks = [...drinks].sort((a, b) => a.timestamp - b.timestamp);
   const startTime = sortedDrinks[0].timestamp;
-  const timeToZero = calculateTimeToZero(drinks, profile, now);
-  const endTime = now + (timeToZero * 3600000);
+  
+  const lastDrinkTime = sortedDrinks[sortedDrinks.length - 1].timestamp;
+  const timeToZeroFromLast = calculateTimeToZero(drinks, profile, lastDrinkTime);
+  let endTime = lastDrinkTime + (timeToZeroFromLast * 3600000);
+
+  const timeToZeroFromNow = calculateTimeToZero(drinks, profile, now);
+  if (now + (timeToZeroFromNow * 3600000) > endTime) {
+    endTime = now + (timeToZeroFromNow * 3600000);
+  }
 
   // Buffer before and after
   const graphStart = startTime - (30 * 60000); // 30 mins before first drink
-  const graphEnd = endTime + (60 * 60000); // 1 hour after sober
+  let graphEnd = endTime + (60 * 60000); // 1 hour after sober
+
+  // Only extend to 'now' if 'now' is within 4 hours of the graph end
+  if (now > startTime && now < graphEnd + (4 * 3600000)) {
+    graphEnd = Math.max(graphEnd, now + (30 * 60000));
+  }
 
   const data = [];
   const step = 30 * 60000; // 30 minute intervals
@@ -132,8 +144,8 @@ export function generateBACGraphData(drinks: Drink[], profile: Profile, now: num
       bac: parseFloat(bac.toFixed(4))
     });
     
-    // Ensure we include 'now' specifically
-    if (t < now && t + step > now) {
+    // Ensure we include 'now' specifically if it's within the graph bounds
+    if (t < now && t + step > now && now <= graphEnd) {
       const currentBac = calculateBAC(drinks, profile, now);
       data.push({
         time: now,
