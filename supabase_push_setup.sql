@@ -11,6 +11,7 @@ create table if not exists public.user_data (
   profile jsonb,
   drinks jsonb,
   presets jsonb,
+  is_sober boolean default true,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -103,3 +104,23 @@ create or replace trigger set_push_subscriptions_updated_at
 --   title: 'Sober Alert!',
 --   body: 'Your estimated BAC is now back to 0.00%. You are sober!'
 -- }));
+
+-- ============================================================
+-- 4. Set up periodic check for Sober Alerts via pg_cron
+-- ============================================================
+-- To automatically check user BACs and send alerts, enable pg_cron 
+-- and schedule the `check-alerts` edge function to run every 5 minutes.
+--
+-- CREATE EXTENSION IF NOT EXISTS pg_cron;
+--
+-- SELECT cron.schedule(
+--   'check-bac-alerts',
+--   '*/5 * * * *', -- Every 5 minutes
+--   $$
+--   SELECT net.http_post(
+--     url:='https://YOUR_PROJECT_REF.supabase.co/functions/v1/check-alerts',
+--     headers:='{"Content-Type": "application/json", "Authorization": "Bearer YOUR_ANON_KEY"}'::jsonb,
+--     body:='{}'::jsonb
+--   ) as request_id;
+--   $$
+-- );
