@@ -113,7 +113,7 @@ const Dashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
         </>
       )}
 
-      <BACGraph drinks={drinks} profile={profile} now={now} />
+      <BACGraph drinks={currentSession ? currentSession.drinks : []} profile={profile} now={now} />
 
       <div className="action-buttons">
         <button className="add-drink-btn" onClick={onAddClick}>
