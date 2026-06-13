@@ -12,6 +12,7 @@ import {
   triggerLocalTestNotification,
   syncSubscriptionToSupabase
 } from '../utils/notifications';
+import pkg from '../../package.json';
 
 const ProfileSettings: React.FC = () => {
   const { 
@@ -764,7 +765,7 @@ const ProfileSettings: React.FC = () => {
       </div>
 
       <div className="version-info" style={{ textAlign: 'center', marginTop: 'var(--spacing-lg)', opacity: 0.5, fontSize: '0.8rem' }}>
-        SipWise v0.1.3
+        SipWise v{pkg.version}
       </div>
 
       <style>{`
