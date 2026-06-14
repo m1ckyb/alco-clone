@@ -133,9 +133,9 @@ const ProfileSettings: React.FC = () => {
           alert('Notification permission denied. Please enable notifications in your browser settings.');
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Notification toggle error:', err);
-      alert('Something went wrong with push notifications. Please try again.');
+      alert(`Something went wrong with push notifications: ${err.message || err}\n\nPlease try again.`);
     }
   };
 

@@ -113,6 +113,9 @@ create or replace trigger set_push_subscriptions_updated_at
 --
 -- CREATE EXTENSION IF NOT EXISTS pg_cron;
 --
+-- -- IMPORTANT: You MUST replace 'YOUR_PROJECT_REF' and 'YOUR_ANON_KEY' below
+-- -- with your actual Supabase project reference and anon key for automated alerts to work!
+-- -- Otherwise, the sober notifications will never be sent.
 -- SELECT cron.schedule(
 --   'check-bac-alerts',
 --   '*/5 * * * *', -- Every 5 minutes
