@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2026-06-14
+
+### Added
+- Added detailed debugging logs to the `check-alerts` Edge Function to trace active user evaluation and push subscription lookup logic.
+
+### Fixed
+- Added prominent warnings to `update_db.sql` and `supabase_push_setup.sql` to ensure the user replaces the `YOUR_PROJECT_REF` and `YOUR_ANON_KEY` placeholders in the pg_cron schedule, preventing silent failures.
+- Fixed a silent failure where the `check-alerts` Edge Function would skip evaluation if the user's `push_subscriptions` row had a NULL `user_id`.
+- Improved error handling in `ProfileSettings.tsx` to display the exact push notification error when enabling notifications, instead of a generic failure message.
+
 ## [0.1.5] - 2026-06-13
 
 ### Added
