@@ -38,8 +38,12 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "Error fetching subscriptions" }), { status: 500 });
   }
 
+  console.log(`Found ${subscriptionsData.length} push subscriptions.`);
+
   // Get unique user IDs
   const userIds = [...new Set(subscriptionsData.map(sub => sub.user_id).filter(Boolean))];
+  console.log(`Unique users with subscriptions: ${userIds.length}`);
+
   if (userIds.length === 0) {
     return new Response(JSON.stringify({ message: "No users with push subscriptions." }), { status: 200 });
   }
@@ -55,14 +59,22 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "Error fetching user data" }), { status: 500 });
   }
 
+  console.log(`Fetched user_data for ${usersData.length} users.`);
+
   let alertsSent = 0;
 
   for (const user of usersData) {
-    if (!user.profile || !user.drinks) continue;
+    console.log(`Processing user: ${user.id}`);
+    if (!user.profile || !user.drinks) {
+      console.log(`Skipping user ${user.id}: Missing profile or drinks.`);
+      continue;
+    }
 
     const currentBAC = calculateBAC(user.drinks, user.profile);
     const wasSober = user.is_sober ?? true;
     const isSoberNow = currentBAC === 0;
+
+    console.log(`User ${user.id} -> currentBAC: ${currentBAC}, wasSober: ${wasSober}, isSoberNow: ${isSoberNow}`);
 
     // State transition: user became sober
     if (isSoberNow && !wasSober) {
@@ -80,10 +92,12 @@ serve(async (req) => {
             })
           );
           alertsSent++;
+          console.log(`Successfully sent push to endpoint: ${sub.endpoint}`);
         } catch (err: any) {
           console.error(`Failed to send notification to ${sub.endpoint}:`, err);
           // If the subscription is gone, we could delete it from the DB
           if (err.statusCode === 410) {
+            console.log(`Subscription expired (410). Deleting from DB.`);
             await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
           }
         }
@@ -96,6 +110,8 @@ serve(async (req) => {
     else if (!isSoberNow && wasSober) {
       console.log(`User ${user.id} started drinking. Updating state to not sober.`);
       await supabase.from('user_data').update({ is_sober: false }).eq('id', user.id);
+    } else {
+      console.log(`User ${user.id} unchanged. (isSoberNow: ${isSoberNow}, wasSober: ${wasSober})`);
     }
     
     // Optional: BAC Reminders (e.g., "Don't forget to log your drinks! Your last drink was 2 hours ago.")
